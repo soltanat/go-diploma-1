@@ -2,13 +2,14 @@ package usecases
 
 import (
 	"context"
-	"github.com/soltanat/go-diploma-1/internal/entities"
-	"github.com/soltanat/go-diploma-1/internal/usecases/storager/mocks"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+
+	"github.com/soltanat/go-diploma-1/internal/entities"
+	"github.com/soltanat/go-diploma-1/internal/usecases/storager/mocks"
 )
 
 func TestOrderProcessor_ProcessOrder(t *testing.T) {

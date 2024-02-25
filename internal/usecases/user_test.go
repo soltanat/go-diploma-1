@@ -3,12 +3,13 @@ package usecases
 import (
 	"context"
 	"fmt"
-	"github.com/soltanat/go-diploma-1/internal/entities"
-	"github.com/soltanat/go-diploma-1/internal/usecases/storager/mocks"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+
+	"github.com/soltanat/go-diploma-1/internal/entities"
+	"github.com/soltanat/go-diploma-1/internal/usecases/storager/mocks"
 )
 
 func TestUserUseCase_Register(t *testing.T) {
