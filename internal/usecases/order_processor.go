@@ -3,18 +3,17 @@ package usecases
 import (
 	"context"
 	"fmt"
-
-	"github.com/soltanat/go-diploma-1/internal/model"
-	"github.com/soltanat/go-diploma-1/internal/model/entities"
+	"github.com/soltanat/go-diploma-1/internal/entities"
+	"github.com/soltanat/go-diploma-1/internal/usecases/storager"
 )
 
 type OrderProcessor struct {
-	userStorager    model.UserStorager
-	orderStorager   model.OrderStorager
-	accrualStorager model.AccrualOrderStorager
+	userStorager    storager.UserStorager
+	orderStorager   storager.OrderStorager
+	accrualStorager storager.AccrualOrderStorager
 }
 
-func NewOrderProcessor(userStorager model.UserStorager, orderStorager model.OrderStorager, accrualStorager model.AccrualOrderStorager) (*OrderProcessor, error) {
+func NewOrderProcessor(userStorager storager.UserStorager, orderStorager storager.OrderStorager, accrualStorager storager.AccrualOrderStorager) (*OrderProcessor, error) {
 	if userStorager == nil {
 		return nil, fmt.Errorf("userStorager is nil")
 	}

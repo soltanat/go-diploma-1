@@ -3,14 +3,13 @@ package usecases
 import (
 	"context"
 	"fmt"
+	"github.com/soltanat/go-diploma-1/internal/entities"
+	"github.com/soltanat/go-diploma-1/internal/usecases/storager/mocks"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-
-	"github.com/soltanat/go-diploma-1/internal/model/entities"
-	"github.com/soltanat/go-diploma-1/internal/model/mocks"
 )
 
 func TestOrderUseCase_CreateOrder(t *testing.T) {
@@ -71,7 +70,7 @@ func TestOrderUseCase_CreateOrder(t *testing.T) {
 
 		err = orderUseCase.CreateOrder(context.Background(), orderNumber, userID)
 		assert.Error(t, err)
-		assert.ErrorAs(t, err, &entities.InvalidUserError{})
+		assert.ErrorAs(t, err, &entities.ValidationError{Err: fmt.Errorf("invalid login: ")})
 	})
 
 	t.Run("Order Creation Error Not found user", func(t *testing.T) {
@@ -196,7 +195,7 @@ func TestOrderUseCase_ListOrdersByUserID(t *testing.T) {
 
 		_, err := orderUseCase.ListOrdersByUserID(context.Background(), userID)
 		assert.Error(t, err)
-		assert.ErrorAs(t, err, &entities.InvalidUserError{})
+		assert.ErrorAs(t, err, &entities.ValidationError{Err: fmt.Errorf("invalid login: ")})
 	})
 
 	t.Run("User not found error", func(t *testing.T) {

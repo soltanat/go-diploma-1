@@ -4,17 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/soltanat/go-diploma-1/internal/usecases/storager"
 
-	"github.com/soltanat/go-diploma-1/internal/model"
-	"github.com/soltanat/go-diploma-1/internal/model/entities"
+	"github.com/soltanat/go-diploma-1/internal/entities"
 )
 
 type OrderUseCase struct {
-	orderStorager model.OrderStorager
-	userStorager  model.UserStorager
+	orderStorager storager.OrderStorager
+	userStorager  storager.UserStorager
 }
 
-func NewOrderUseCase(orderStorager model.OrderStorager, userStorager model.UserStorager) (*OrderUseCase, error) {
+func NewOrderUseCase(orderStorager storager.OrderStorager, userStorager storager.UserStorager) (*OrderUseCase, error) {
 	if orderStorager == nil {
 		return nil, fmt.Errorf("orderStorager is nil")
 	}

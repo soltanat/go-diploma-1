@@ -3,17 +3,16 @@ package usecases
 import (
 	"context"
 	"fmt"
-
-	"github.com/soltanat/go-diploma-1/internal/model"
-	"github.com/soltanat/go-diploma-1/internal/model/entities"
+	"github.com/soltanat/go-diploma-1/internal/entities"
+	"github.com/soltanat/go-diploma-1/internal/usecases/storager"
 )
 
 type WithdrawUseCase struct {
-	withdrawalStorager model.WithdrawalStorager
-	userStorager       model.UserStorager
+	withdrawalStorager storager.WithdrawalStorager
+	userStorager       storager.UserStorager
 }
 
-func NewWithdrawUseCase(withdrawalStorager model.WithdrawalStorager, userStorager model.UserStorager) (*WithdrawUseCase, error) {
+func NewWithdrawUseCase(withdrawalStorager storager.WithdrawalStorager, userStorager storager.UserStorager) (*WithdrawUseCase, error) {
 	if withdrawalStorager == nil {
 		return nil, fmt.Errorf("withdrawalStorager is nil")
 	}
@@ -26,7 +25,7 @@ func NewWithdrawUseCase(withdrawalStorager model.WithdrawalStorager, userStorage
 	}, nil
 }
 
-func (u *WithdrawUseCase) ListWithdrawals(
+func (u *WithdrawUseCase) List(
 	ctx context.Context, userID entities.Login) ([]entities.Withdrawal, error,
 ) {
 	if err := userID.Validate(); err != nil {
@@ -36,7 +35,7 @@ func (u *WithdrawUseCase) ListWithdrawals(
 }
 
 func (u *WithdrawUseCase) Withdraw(
-	ctx context.Context, userID entities.Login, orderNumber entities.OrderNumber, sum entities.Currency,
+	ctx context.Context, userID entities.Login, orderNumber entities.OrderNumber, amount entities.Currency,
 ) error {
 	if err := userID.Validate(); err != nil {
 		return err
@@ -44,7 +43,7 @@ func (u *WithdrawUseCase) Withdraw(
 	if err := orderNumber.Validate(); err != nil {
 		return err
 	}
-	if err := sum.Validate(); err != nil {
+	if err := amount.Validate(); err != nil {
 		return err
 	}
 
@@ -55,7 +54,7 @@ func (u *WithdrawUseCase) Withdraw(
 		return err
 	}
 
-	if err := user.Balance.Sub(&sum); err != nil {
+	if err := user.Balance.Sub(&amount); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -66,7 +65,7 @@ func (u *WithdrawUseCase) Withdraw(
 		return err
 	}
 
-	withdrawal := entities.NewWithdrawal(orderNumber, sum, userID)
+	withdrawal := entities.NewWithdrawal(orderNumber, amount, userID)
 	err = u.withdrawalStorager.SaveTx(ctx, tx, withdrawal)
 	if err != nil {
 		tx.Rollback()

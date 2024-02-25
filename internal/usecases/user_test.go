@@ -2,13 +2,13 @@ package usecases
 
 import (
 	"context"
+	"fmt"
+	"github.com/soltanat/go-diploma-1/internal/entities"
+	"github.com/soltanat/go-diploma-1/internal/usecases/storager/mocks"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-
-	"github.com/soltanat/go-diploma-1/internal/model/entities"
-	"github.com/soltanat/go-diploma-1/internal/model/mocks"
 )
 
 func TestUserUseCase_Register(t *testing.T) {
@@ -26,14 +26,14 @@ func TestUserUseCase_Register(t *testing.T) {
 		mockStorage.EXPECT().Get(gomock.Any(), user.Login, nil).Return(nil, entities.NotFoundError{})
 		mockStorage.EXPECT().Save(gomock.Any(), user).Return(nil)
 
-		err = userUseCase.Register(context.Background(), "", "")
+		err = userUseCase.Register(context.Background(), user.Login, user.Password)
 		assert.NoError(t, err)
 	})
 
 	t.Run("User Validation Error", func(t *testing.T) {
 		err = userUseCase.Register(context.Background(), "", "")
 		assert.Error(t, err)
-		assert.ErrorAs(t, err, &entities.InvalidUserError{})
+		assert.ErrorAs(t, err, &entities.ValidationError{Err: fmt.Errorf("invalid login: ")})
 	})
 
 	t.Run("Existing User Error", func(t *testing.T) {
@@ -44,7 +44,7 @@ func TestUserUseCase_Register(t *testing.T) {
 
 		mockStorage.EXPECT().Get(gomock.Any(), user.Login, nil).Return(nil, entities.ExistUserError{})
 
-		err := userUseCase.Register(context.Background(), "", "")
+		err := userUseCase.Register(context.Background(), user.Login, user.Password)
 		assert.Error(t, err)
 		assert.ErrorAs(t, err, &entities.ExistUserError{})
 	})
@@ -58,7 +58,7 @@ func TestUserUseCase_Register(t *testing.T) {
 		mockStorage.EXPECT().Get(gomock.Any(), user.Login, nil).Return(nil, entities.NotFoundError{})
 		mockStorage.EXPECT().Save(gomock.Any(), user).Return(entities.StorageError{})
 
-		err := userUseCase.Register(context.Background(), "", "")
+		err := userUseCase.Register(context.Background(), user.Login, user.Password)
 		assert.Error(t, err)
 		assert.ErrorAs(t, err, &entities.StorageError{})
 	})
@@ -97,8 +97,7 @@ func TestUserUseCase_Authenticate(t *testing.T) {
 		}
 		result, err := userUseCase.Authenticate(context.Background(), user.Login, user.Password)
 		assert.Nil(t, result)
-		assert.Error(t, err)
-		assert.ErrorAs(t, err, &entities.InvalidUserError{})
+		assert.ErrorAs(t, err, &entities.ValidationError{Err: fmt.Errorf("invalid login: ")})
 	})
 
 	t.Run("User Password Error", func(t *testing.T) {
@@ -108,7 +107,7 @@ func TestUserUseCase_Authenticate(t *testing.T) {
 		result, err := userUseCase.Authenticate(context.Background(), user.Login, user.Password)
 		assert.Nil(t, result)
 		assert.Error(t, err)
-		assert.ErrorAs(t, err, &entities.InvalidUserError{})
+		assert.ErrorAs(t, err, &entities.ValidationError{Err: fmt.Errorf("password is empty")})
 	})
 
 	t.Run("User Not Found Error", func(t *testing.T) {

@@ -4,16 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
-	"github.com/soltanat/go-diploma-1/internal/model"
-	"github.com/soltanat/go-diploma-1/internal/model/entities"
+	"github.com/soltanat/go-diploma-1/internal/entities"
+	storager2 "github.com/soltanat/go-diploma-1/internal/usecases/storager"
 )
 
 type UserUseCase struct {
-	storager model.UserStorager
+	storager storager2.UserStorager
 }
 
-func NewUserUseCase(storager model.UserStorager) (*UserUseCase, error) {
+func NewUserUseCase(storager storager2.UserStorager) (*UserUseCase, error) {
 	if storager == nil {
 		return nil, fmt.Errorf("userStorager is nil")
 	}
