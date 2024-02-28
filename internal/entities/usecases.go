@@ -14,6 +14,7 @@ type OrderProcessorUseCase interface {
 type UserUseCase interface {
 	Register(ctx context.Context, login Login, password string) error
 	Authenticate(ctx context.Context, login Login, password string) (*User, error)
+	GetUser(ctx context.Context, login Login) (*User, error)
 }
 
 type WithdrawalUseCase interface {

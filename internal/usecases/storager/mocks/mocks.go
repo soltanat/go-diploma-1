@@ -41,42 +41,46 @@ func (m *MockTx) EXPECT() *MockTxMockRecorder {
 	return m.recorder
 }
 
-// Commit mocks base method.
-func (m *MockTx) Commit() {
+// Begin mocks base method.
+func (m *MockTx) Begin(ctx context.Context) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Commit")
-}
-
-// Commit indicates an expected call of Commit.
-func (mr *MockTxMockRecorder) Commit() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockTx)(nil).Commit))
-}
-
-// GetTx mocks base method.
-func (m *MockTx) GetTx() any {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTx")
-	ret0, _ := ret[0].(any)
+	ret := m.ctrl.Call(m, "Begin", ctx)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// GetTx indicates an expected call of GetTx.
-func (mr *MockTxMockRecorder) GetTx() *gomock.Call {
+// Begin indicates an expected call of Begin.
+func (mr *MockTxMockRecorder) Begin(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTx", reflect.TypeOf((*MockTx)(nil).GetTx))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Begin", reflect.TypeOf((*MockTx)(nil).Begin), ctx)
+}
+
+// Commit mocks base method.
+func (m *MockTx) Commit(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Commit", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Commit indicates an expected call of Commit.
+func (mr *MockTxMockRecorder) Commit(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockTx)(nil).Commit), ctx)
 }
 
 // Rollback mocks base method.
-func (m *MockTx) Rollback() {
+func (m *MockTx) Rollback(ctx context.Context) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Rollback")
+	ret := m.ctrl.Call(m, "Rollback", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Rollback indicates an expected call of Rollback.
-func (mr *MockTxMockRecorder) Rollback() *gomock.Call {
+func (mr *MockTxMockRecorder) Rollback(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockTx)(nil).Rollback))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockTx)(nil).Rollback), ctx)
 }
 
 // MockOrderStorager is a mock of OrderStorager interface.
@@ -103,62 +107,47 @@ func (m *MockOrderStorager) EXPECT() *MockOrderStoragerMockRecorder {
 }
 
 // Get mocks base method.
-func (m *MockOrderStorager) Get(ctx context.Context, number entities.OrderNumber) (*entities.Order, error) {
+func (m *MockOrderStorager) Get(ctx context.Context, tx storager.Tx, number entities.OrderNumber) (*entities.Order, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", ctx, number)
+	ret := m.ctrl.Call(m, "Get", ctx, tx, number)
 	ret0, _ := ret[0].(*entities.Order)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockOrderStoragerMockRecorder) Get(ctx, number any) *gomock.Call {
+func (mr *MockOrderStoragerMockRecorder) Get(ctx, tx, number any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockOrderStorager)(nil).Get), ctx, number)
-}
-
-// GetTx mocks base method.
-func (m *MockOrderStorager) GetTx(ctx context.Context, tx storager.Tx, number entities.OrderNumber) (*entities.Order, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTx", ctx, tx, number)
-	ret0, _ := ret[0].(*entities.Order)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTx indicates an expected call of GetTx.
-func (mr *MockOrderStoragerMockRecorder) GetTx(ctx, tx, number any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTx", reflect.TypeOf((*MockOrderStorager)(nil).GetTx), ctx, tx, number)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockOrderStorager)(nil).Get), ctx, tx, number)
 }
 
 // List mocks base method.
-func (m *MockOrderStorager) List(ctx context.Context, userID *entities.Login) ([]entities.Order, error) {
+func (m *MockOrderStorager) List(ctx context.Context, tx storager.Tx, userID *entities.Login) ([]entities.Order, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "List", ctx, userID)
+	ret := m.ctrl.Call(m, "List", ctx, tx, userID)
 	ret0, _ := ret[0].([]entities.Order)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // List indicates an expected call of List.
-func (mr *MockOrderStoragerMockRecorder) List(ctx, userID any) *gomock.Call {
+func (mr *MockOrderStoragerMockRecorder) List(ctx, tx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockOrderStorager)(nil).List), ctx, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockOrderStorager)(nil).List), ctx, tx, userID)
 }
 
 // Save mocks base method.
-func (m *MockOrderStorager) Save(ctx context.Context, order *entities.Order) error {
+func (m *MockOrderStorager) Save(ctx context.Context, tx storager.Tx, order *entities.Order) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", ctx, order)
+	ret := m.ctrl.Call(m, "Save", ctx, tx, order)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Save indicates an expected call of Save.
-func (mr *MockOrderStoragerMockRecorder) Save(ctx, order any) *gomock.Call {
+func (mr *MockOrderStoragerMockRecorder) Save(ctx, tx, order any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockOrderStorager)(nil).Save), ctx, order)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockOrderStorager)(nil).Save), ctx, tx, order)
 }
 
 // Tx mocks base method.
@@ -176,31 +165,17 @@ func (mr *MockOrderStoragerMockRecorder) Tx(ctx any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockOrderStorager) Update(ctx context.Context, order *entities.Order) error {
+func (m *MockOrderStorager) Update(ctx context.Context, tx storager.Tx, order *entities.Order) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", ctx, order)
+	ret := m.ctrl.Call(m, "Update", ctx, tx, order)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Update indicates an expected call of Update.
-func (mr *MockOrderStoragerMockRecorder) Update(ctx, order any) *gomock.Call {
+func (mr *MockOrderStoragerMockRecorder) Update(ctx, tx, order any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockOrderStorager)(nil).Update), ctx, order)
-}
-
-// UpdateTx mocks base method.
-func (m *MockOrderStorager) UpdateTx(ctx context.Context, tx storager.Tx, order *entities.Order) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateTx", ctx, tx, order)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateTx indicates an expected call of UpdateTx.
-func (mr *MockOrderStoragerMockRecorder) UpdateTx(ctx, tx, order any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTx", reflect.TypeOf((*MockOrderStorager)(nil).UpdateTx), ctx, tx, order)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockOrderStorager)(nil).Update), ctx, tx, order)
 }
 
 // MockUserStorager is a mock of UserStorager interface.
@@ -227,47 +202,32 @@ func (m *MockUserStorager) EXPECT() *MockUserStoragerMockRecorder {
 }
 
 // Get mocks base method.
-func (m *MockUserStorager) Get(ctx context.Context, login entities.Login, password *string) (*entities.User, error) {
+func (m *MockUserStorager) Get(ctx context.Context, tx storager.Tx, login entities.Login) (*entities.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", ctx, login, password)
+	ret := m.ctrl.Call(m, "Get", ctx, tx, login)
 	ret0, _ := ret[0].(*entities.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockUserStoragerMockRecorder) Get(ctx, login, password any) *gomock.Call {
+func (mr *MockUserStoragerMockRecorder) Get(ctx, tx, login any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockUserStorager)(nil).Get), ctx, login, password)
-}
-
-// GetTx mocks base method.
-func (m *MockUserStorager) GetTx(ctx context.Context, tx storager.Tx, login entities.Login, password *string) (*entities.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTx", ctx, tx, login, password)
-	ret0, _ := ret[0].(*entities.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTx indicates an expected call of GetTx.
-func (mr *MockUserStoragerMockRecorder) GetTx(ctx, tx, login, password any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTx", reflect.TypeOf((*MockUserStorager)(nil).GetTx), ctx, tx, login, password)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockUserStorager)(nil).Get), ctx, tx, login)
 }
 
 // Save mocks base method.
-func (m *MockUserStorager) Save(ctx context.Context, user *entities.User) error {
+func (m *MockUserStorager) Save(ctx context.Context, tx storager.Tx, user *entities.User) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", ctx, user)
+	ret := m.ctrl.Call(m, "Save", ctx, tx, user)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Save indicates an expected call of Save.
-func (mr *MockUserStoragerMockRecorder) Save(ctx, user any) *gomock.Call {
+func (mr *MockUserStoragerMockRecorder) Save(ctx, tx, user any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockUserStorager)(nil).Save), ctx, user)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockUserStorager)(nil).Save), ctx, tx, user)
 }
 
 // Tx mocks base method.
@@ -285,31 +245,17 @@ func (mr *MockUserStoragerMockRecorder) Tx(ctx any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockUserStorager) Update(ctx context.Context, user *entities.User) error {
+func (m *MockUserStorager) Update(ctx context.Context, tx storager.Tx, user *entities.User) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", ctx, user)
+	ret := m.ctrl.Call(m, "Update", ctx, tx, user)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Update indicates an expected call of Update.
-func (mr *MockUserStoragerMockRecorder) Update(ctx, user any) *gomock.Call {
+func (mr *MockUserStoragerMockRecorder) Update(ctx, tx, user any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockUserStorager)(nil).Update), ctx, user)
-}
-
-// UpdateTx mocks base method.
-func (m *MockUserStorager) UpdateTx(ctx context.Context, tx storager.Tx, user *entities.User) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateTx", ctx, tx, user)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateTx indicates an expected call of UpdateTx.
-func (mr *MockUserStoragerMockRecorder) UpdateTx(ctx, tx, user any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTx", reflect.TypeOf((*MockUserStorager)(nil).UpdateTx), ctx, tx, user)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockUserStorager)(nil).Update), ctx, tx, user)
 }
 
 // MockWithdrawalStorager is a mock of WithdrawalStorager interface.
@@ -336,32 +282,32 @@ func (m *MockWithdrawalStorager) EXPECT() *MockWithdrawalStoragerMockRecorder {
 }
 
 // List mocks base method.
-func (m *MockWithdrawalStorager) List(ctx context.Context, userID entities.Login) ([]entities.Withdrawal, error) {
+func (m *MockWithdrawalStorager) List(ctx context.Context, tx storager.Tx, userID entities.Login) ([]entities.Withdrawal, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "List", ctx, userID)
+	ret := m.ctrl.Call(m, "List", ctx, tx, userID)
 	ret0, _ := ret[0].([]entities.Withdrawal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // List indicates an expected call of List.
-func (mr *MockWithdrawalStoragerMockRecorder) List(ctx, userID any) *gomock.Call {
+func (mr *MockWithdrawalStoragerMockRecorder) List(ctx, tx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockWithdrawalStorager)(nil).List), ctx, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockWithdrawalStorager)(nil).List), ctx, tx, userID)
 }
 
-// SaveTx mocks base method.
-func (m *MockWithdrawalStorager) SaveTx(ctx context.Context, tx storager.Tx, withdraw *entities.Withdrawal) error {
+// Save mocks base method.
+func (m *MockWithdrawalStorager) Save(ctx context.Context, tx storager.Tx, withdraw *entities.Withdrawal) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveTx", ctx, tx, withdraw)
+	ret := m.ctrl.Call(m, "Save", ctx, tx, withdraw)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SaveTx indicates an expected call of SaveTx.
-func (mr *MockWithdrawalStoragerMockRecorder) SaveTx(ctx, tx, withdraw any) *gomock.Call {
+// Save indicates an expected call of Save.
+func (mr *MockWithdrawalStoragerMockRecorder) Save(ctx, tx, withdraw any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTx", reflect.TypeOf((*MockWithdrawalStorager)(nil).SaveTx), ctx, tx, withdraw)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockWithdrawalStorager)(nil).Save), ctx, tx, withdraw)
 }
 
 // Tx mocks base method.

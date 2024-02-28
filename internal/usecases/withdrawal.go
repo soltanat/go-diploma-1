@@ -32,7 +32,7 @@ func (u *WithdrawUseCase) List(
 	if err := userID.Validate(); err != nil {
 		return nil, err
 	}
-	return u.withdrawalStorager.List(ctx, userID)
+	return u.withdrawalStorager.List(ctx, nil, userID)
 }
 
 func (u *WithdrawUseCase) Withdraw(
@@ -49,30 +49,30 @@ func (u *WithdrawUseCase) Withdraw(
 	}
 
 	tx := u.userStorager.Tx(ctx)
-	user, err := u.userStorager.GetTx(ctx, tx, userID, nil)
+	user, err := u.userStorager.Get(ctx, tx, userID)
 	if err != nil {
-		tx.Rollback()
+		tx.Rollback(ctx)
 		return err
 	}
 
 	if err := user.Balance.Sub(&amount); err != nil {
-		tx.Rollback()
+		tx.Rollback(ctx)
 		return err
 	}
 
-	err = u.userStorager.UpdateTx(ctx, tx, user)
+	err = u.userStorager.Update(ctx, tx, user)
 	if err != nil {
-		tx.Rollback()
+		tx.Rollback(ctx)
 		return err
 	}
 
 	withdrawal := entities.NewWithdrawal(orderNumber, amount, userID)
-	err = u.withdrawalStorager.SaveTx(ctx, tx, withdrawal)
+	err = u.withdrawalStorager.Save(ctx, tx, withdrawal)
 	if err != nil {
-		tx.Rollback()
+		tx.Rollback(ctx)
 		return err
 	}
 
-	tx.Commit()
+	tx.Commit(ctx)
 	return nil
 }

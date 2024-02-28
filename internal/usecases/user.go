@@ -28,13 +28,13 @@ func (u *UserUseCase) Register(ctx context.Context, login entities.Login, passwo
 		return err
 	}
 
-	if _, err := u.storager.Get(ctx, user.Login, nil); err == nil {
+	if _, err := u.storager.Get(ctx, nil, user.Login); err == nil {
 		return entities.ExistUserError{}
 	} else if err != nil && !errors.Is(err, entities.NotFoundError{}) {
 		return err
 	}
 
-	return u.storager.Save(ctx, user)
+	return u.storager.Save(ctx, nil, user)
 }
 
 func (u *UserUseCase) Authenticate(ctx context.Context, login entities.Login, password string) (*entities.User, error) {
@@ -45,7 +45,7 @@ func (u *UserUseCase) Authenticate(ctx context.Context, login entities.Login, pa
 		return nil, entities.ValidationError{Err: fmt.Errorf("password is empty")}
 	}
 
-	user, err := u.storager.Get(ctx, login, &password)
+	user, err := u.storager.Get(ctx, nil, login)
 	if err != nil {
 		return nil, err
 	}
@@ -55,4 +55,11 @@ func (u *UserUseCase) Authenticate(ctx context.Context, login entities.Login, pa
 	}
 
 	return user, nil
+}
+
+func (u *UserUseCase) GetUser(ctx context.Context, login entities.Login) (*entities.User, error) {
+	if err := login.Validate(); err != nil {
+		return nil, err
+	}
+	return u.storager.Get(ctx, nil, login)
 }

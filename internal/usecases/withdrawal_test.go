@@ -41,24 +41,24 @@ func TestWithdrawUseCase_Withdraw(t *testing.T) {
 				Decimal: 50,
 			},
 		}
-		userStorage.EXPECT().GetTx(gomock.Any(), tx, userID, nil).Return(&returnUser, nil)
+		userStorage.EXPECT().Get(gomock.Any(), tx, userID).Return(&returnUser, nil)
 
 		updatedUser := returnUser
 		updatedUser.Balance = entities.Currency{
 			Whole:   80,
 			Decimal: 30,
 		}
-		userStorage.EXPECT().UpdateTx(gomock.Any(), tx, &updatedUser).Return(nil)
+		userStorage.EXPECT().Update(gomock.Any(), tx, &updatedUser).Return(nil)
 
 		newWithdrawal := entities.Withdrawal{
-			Order:       orderNumber,
+			OrderNumber: orderNumber,
 			UserID:      userID,
 			Sum:         sum,
 			ProcessedAt: now,
 		}
-		withdrawalStorage.EXPECT().SaveTx(gomock.Any(), tx, &newWithdrawal).Return(nil)
+		withdrawalStorage.EXPECT().Save(gomock.Any(), tx, &newWithdrawal).Return(nil)
 
-		tx.EXPECT().Commit()
+		tx.EXPECT().Commit(gomock.Any()).Return(nil)
 
 		err = withdrawalUseCase.Withdraw(context.Background(), userID, orderNumber, sum)
 		assert.NoError(t, err)

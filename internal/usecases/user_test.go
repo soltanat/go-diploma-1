@@ -24,8 +24,8 @@ func TestUserUseCase_Register(t *testing.T) {
 			Password: "password",
 		}
 
-		mockStorage.EXPECT().Get(gomock.Any(), user.Login, nil).Return(nil, entities.NotFoundError{})
-		mockStorage.EXPECT().Save(gomock.Any(), user).Return(nil)
+		mockStorage.EXPECT().Get(gomock.Any(), nil, user.Login).Return(nil, entities.NotFoundError{})
+		mockStorage.EXPECT().Save(gomock.Any(), nil, user).Return(nil)
 
 		err = userUseCase.Register(context.Background(), user.Login, user.Password)
 		assert.NoError(t, err)
@@ -43,7 +43,7 @@ func TestUserUseCase_Register(t *testing.T) {
 			Password: "password",
 		}
 
-		mockStorage.EXPECT().Get(gomock.Any(), user.Login, nil).Return(nil, entities.ExistUserError{})
+		mockStorage.EXPECT().Get(gomock.Any(), nil, user.Login).Return(nil, entities.ExistUserError{})
 
 		err := userUseCase.Register(context.Background(), user.Login, user.Password)
 		assert.Error(t, err)
@@ -56,8 +56,8 @@ func TestUserUseCase_Register(t *testing.T) {
 			Password: "password",
 		}
 
-		mockStorage.EXPECT().Get(gomock.Any(), user.Login, nil).Return(nil, entities.NotFoundError{})
-		mockStorage.EXPECT().Save(gomock.Any(), user).Return(entities.StorageError{})
+		mockStorage.EXPECT().Get(gomock.Any(), nil, user.Login).Return(nil, entities.NotFoundError{})
+		mockStorage.EXPECT().Save(gomock.Any(), nil, user).Return(entities.StorageError{})
 
 		err := userUseCase.Register(context.Background(), user.Login, user.Password)
 		assert.Error(t, err)
@@ -85,7 +85,7 @@ func TestUserUseCase_Authenticate(t *testing.T) {
 				Decimal: 0,
 			},
 		}
-		mockStorage.EXPECT().Get(gomock.Any(), user.Login, &user.Password).Return(returnUser, nil)
+		mockStorage.EXPECT().Get(gomock.Any(), nil, user.Login).Return(returnUser, nil)
 
 		result, err := userUseCase.Authenticate(context.Background(), user.Login, user.Password)
 		assert.NoError(t, err)
@@ -116,7 +116,7 @@ func TestUserUseCase_Authenticate(t *testing.T) {
 			Login:    "login",
 			Password: "password",
 		}
-		mockStorage.EXPECT().Get(gomock.Any(), user.Login, &user.Password).Return(nil, entities.NotFoundError{})
+		mockStorage.EXPECT().Get(gomock.Any(), nil, user.Login).Return(nil, entities.NotFoundError{})
 		result, err := userUseCase.Authenticate(context.Background(), user.Login, user.Password)
 		assert.Nil(t, result)
 		assert.Error(t, err)
@@ -128,7 +128,7 @@ func TestUserUseCase_Authenticate(t *testing.T) {
 			Login:    "login",
 			Password: "password",
 		}
-		mockStorage.EXPECT().Get(gomock.Any(), user.Login, &user.Password).Return(nil, entities.StorageError{})
+		mockStorage.EXPECT().Get(gomock.Any(), nil, user.Login).Return(nil, entities.StorageError{})
 		result, err := userUseCase.Authenticate(context.Background(), user.Login, user.Password)
 		assert.Error(t, err)
 		assert.ErrorAs(t, err, &entities.StorageError{})

@@ -12,9 +12,14 @@ type OrderProcessor struct {
 	userStorager    storager.UserStorager
 	orderStorager   storager.OrderStorager
 	accrualStorager storager.AccrualOrderStorager
+	orders          chan entities.Order
 }
 
-func NewOrderProcessor(userStorager storager.UserStorager, orderStorager storager.OrderStorager, accrualStorager storager.AccrualOrderStorager) (*OrderProcessor, error) {
+func NewOrderProcessor(
+	userStorager storager.UserStorager,
+	orderStorager storager.OrderStorager,
+	accrualStorager storager.AccrualOrderStorager,
+) (*OrderProcessor, error) {
 	if userStorager == nil {
 		return nil, fmt.Errorf("userStorager is nil")
 	}
@@ -25,11 +30,33 @@ func NewOrderProcessor(userStorager storager.UserStorager, orderStorager storage
 		return nil, fmt.Errorf("accrualStorager is nil")
 	}
 
+	ordersCh := make(chan entities.Order)
+
 	return &OrderProcessor{
 		userStorager:    userStorager,
 		orderStorager:   orderStorager,
 		accrualStorager: accrualStorager,
+		orders:          ordersCh,
 	}, nil
+}
+
+func (u *OrderProcessor) AddOrder(order entities.Order) {
+	u.orders <- order
+}
+
+func (u *OrderProcessor) Run(ctx context.Context) {
+	for order := range u.orders {
+		if ctx.Err() != nil {
+			return
+		}
+		if err := u.ProcessOrder(ctx, order.Number); err != nil {
+			//	TODO: что с ошибками
+		}
+	}
+}
+
+func (u *OrderProcessor) Stop() {
+	close(u.orders)
 }
 
 func (u *OrderProcessor) ProcessOrder(ctx context.Context, number entities.OrderNumber) error {
@@ -39,51 +66,51 @@ func (u *OrderProcessor) ProcessOrder(ctx context.Context, number entities.Order
 
 	tx := u.orderStorager.Tx(ctx)
 
-	order, err := u.orderStorager.GetTx(ctx, tx, number)
+	order, err := u.orderStorager.Get(ctx, tx, number)
 	if err != nil {
-		tx.Rollback()
+		tx.Rollback(ctx)
 		return err
 	}
 
 	if order.IsProcessed() {
-		tx.Rollback()
+		tx.Rollback(ctx)
 		return nil
 	}
 
-	user, err := u.userStorager.GetTx(ctx, tx, order.UserID, nil)
+	user, err := u.userStorager.Get(ctx, tx, order.UserID)
 	if err != nil {
-		tx.Rollback()
+		tx.Rollback(ctx)
 		return err
 	}
 
 	accrualOrder, err := u.accrualStorager.Get(ctx, number)
 	if err != nil {
-		tx.Rollback()
+		tx.Rollback(ctx)
 		return err
 	}
 
 	updated := order.UpdateWithAccrualOrder(accrualOrder)
 
 	if !updated {
-		tx.Rollback()
+		tx.Rollback(ctx)
 		return nil
 	}
 
 	user.Balance.Add(&accrualOrder.Accrual)
 
-	err = u.userStorager.UpdateTx(ctx, tx, user)
+	err = u.userStorager.Update(ctx, tx, user)
 	if err != nil {
-		tx.Rollback()
+		tx.Rollback(ctx)
 		return err
 	}
 
-	err = u.orderStorager.UpdateTx(ctx, tx, order)
+	err = u.orderStorager.Update(ctx, tx, order)
 	if err != nil {
-		tx.Rollback()
+		tx.Rollback(ctx)
 		return err
 	}
 
-	tx.Commit()
+	tx.Commit(ctx)
 
 	return nil
 }

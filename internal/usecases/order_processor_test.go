@@ -23,7 +23,7 @@ func TestOrderProcessor_ProcessOrder(t *testing.T) {
 	now := time.Now()
 	entities.Now = func() time.Time { return now }
 
-	t.Run("Valid Order Process (Accrual Processed)", func(t *testing.T) {
+	t.Run("Valid OrderNumber Process (Accrual Processed)", func(t *testing.T) {
 		orderNumber := entities.OrderNumber(1)
 
 		tx := mocks.NewMockTx(gomock.NewController(t))
@@ -40,7 +40,7 @@ func TestOrderProcessor_ProcessOrder(t *testing.T) {
 			UploadedAt: now,
 			UserID:     entities.Login("user"),
 		}
-		orderStorage.EXPECT().GetTx(gomock.Any(), tx, orderNumber).Return(&returnOrder, nil)
+		orderStorage.EXPECT().Get(gomock.Any(), tx, orderNumber).Return(&returnOrder, nil)
 
 		returnUser := entities.User{
 			Login:    entities.Login("user"),
@@ -50,7 +50,7 @@ func TestOrderProcessor_ProcessOrder(t *testing.T) {
 				Decimal: 0,
 			},
 		}
-		userStorage.EXPECT().GetTx(gomock.Any(), tx, returnOrder.UserID, nil).Return(&returnUser, nil)
+		userStorage.EXPECT().Get(gomock.Any(), tx, returnOrder.UserID).Return(&returnUser, nil)
 
 		returnAccrual := entities.AccrualOrder{
 			Number: orderNumber,
@@ -67,7 +67,7 @@ func TestOrderProcessor_ProcessOrder(t *testing.T) {
 			Whole:   20,
 			Decimal: 20,
 		}
-		userStorage.EXPECT().UpdateTx(gomock.Any(), tx, &updatedUser).Return(nil)
+		userStorage.EXPECT().Update(gomock.Any(), tx, &updatedUser).Return(nil)
 
 		updatedOrder := returnOrder
 		updatedOrder.Status = entities.OrderStatusPROCESSED
@@ -75,9 +75,9 @@ func TestOrderProcessor_ProcessOrder(t *testing.T) {
 			Whole:   20,
 			Decimal: 20,
 		}
-		orderStorage.EXPECT().UpdateTx(gomock.Any(), tx, &updatedOrder).Return(nil)
+		orderStorage.EXPECT().Update(gomock.Any(), tx, &updatedOrder).Return(nil)
 
-		tx.EXPECT().Commit()
+		tx.EXPECT().Commit(gomock.Any()).Return(nil)
 
 		err := orderUseCase.ProcessOrder(context.Background(), orderNumber)
 		assert.NoError(t, err)

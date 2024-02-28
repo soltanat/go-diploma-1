@@ -10,20 +10,25 @@ import (
 )
 
 type OrderUseCase struct {
-	orderStorager storager.OrderStorager
-	userStorager  storager.UserStorager
+	orderStorager  storager.OrderStorager
+	userStorager   storager.UserStorager
+	OrderProcessor entities.OrderProcessorUseCase
 }
 
-func NewOrderUseCase(orderStorager storager.OrderStorager, userStorager storager.UserStorager) (*OrderUseCase, error) {
+func NewOrderUseCase(orderStorager storager.OrderStorager, userStorager storager.UserStorager, orderProcessor entities.OrderProcessorUseCase) (*OrderUseCase, error) {
 	if orderStorager == nil {
 		return nil, fmt.Errorf("orderStorager is nil")
 	}
 	if userStorager == nil {
 		return nil, fmt.Errorf("userStorager is nil")
 	}
+	if orderProcessor == nil {
+		return nil, fmt.Errorf("orderProcessor is nil")
+	}
 	return &OrderUseCase{
-		orderStorager: orderStorager,
-		userStorager:  userStorager,
+		orderStorager:  orderStorager,
+		userStorager:   userStorager,
+		OrderProcessor: orderProcessor,
 	}, nil
 }
 
@@ -36,12 +41,12 @@ func (u *OrderUseCase) CreateOrder(ctx context.Context, orderNumber entities.Ord
 		return err
 	}
 
-	_, err := u.userStorager.Get(ctx, userID, nil)
+	_, err := u.userStorager.Get(ctx, nil, userID)
 	if err != nil {
 		return err
 	}
 
-	if order, err := u.orderStorager.Get(ctx, orderNumber); err == nil {
+	if order, err := u.orderStorager.Get(ctx, nil, orderNumber); err == nil {
 		if order.UserID == userID {
 			return entities.ExistOrderError{}
 		}
@@ -53,7 +58,17 @@ func (u *OrderUseCase) CreateOrder(ctx context.Context, orderNumber entities.Ord
 	}
 
 	order := entities.NewOrder(orderNumber, userID)
-	return u.orderStorager.Save(ctx, order)
+	err = u.orderStorager.Save(ctx, nil, order)
+	if err != nil {
+		return err
+	}
+
+	err = u.OrderProcessor.ProcessOrder(ctx, orderNumber)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (u *OrderUseCase) ListOrdersByUserID(ctx context.Context, userID entities.Login) ([]entities.Order, error) {
@@ -61,10 +76,10 @@ func (u *OrderUseCase) ListOrdersByUserID(ctx context.Context, userID entities.L
 		return nil, err
 	}
 
-	_, err := u.userStorager.Get(ctx, userID, nil)
+	_, err := u.userStorager.Get(ctx, nil, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return u.orderStorager.List(ctx, &userID)
+	return u.orderStorager.List(ctx, nil, &userID)
 }

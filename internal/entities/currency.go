@@ -1,6 +1,10 @@
 package entities
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 type Currency struct {
 	Whole   int
@@ -44,4 +48,22 @@ func (c *Currency) Sub(sub *Currency) error {
 	c.Decimal = decimal
 
 	return nil
+}
+
+func (c *Currency) String() string {
+	return fmt.Sprintf("%d.%d", c.Whole, c.Decimal)
+}
+
+func FromString(s string) Currency {
+	whole, decimal := 0, 0
+
+	parts := strings.Split(s, ".")
+	if len(parts) == 1 {
+		whole, _ = strconv.Atoi(parts[0])
+	} else if len(parts) == 2 {
+		whole, _ = strconv.Atoi(parts[0])
+		decimal, _ = strconv.Atoi(parts[1])
+	}
+
+	return Currency{Whole: whole, Decimal: decimal}
 }

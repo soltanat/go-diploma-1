@@ -32,6 +32,12 @@ func (e ExistUserError) Error() string {
 	return "exist user"
 }
 
+type ExistWithdrawalError struct{}
+
+func (e ExistWithdrawalError) Error() string {
+	return "exist user"
+}
+
 type NotExistUserError struct{}
 
 func (e NotExistUserError) Error() string {
