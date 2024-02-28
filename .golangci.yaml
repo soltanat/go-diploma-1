@@ -1,0 +1,7 @@
+linters-settings:
+  goimports:
+    local-prefixes: github.com/soltanat/go-diploma-1
+
+linters:
+  enable:
+    - goimports
