@@ -1,0 +1,29 @@
+###
+POST http://localhost:8080/api/goods HTTP/1.1
+Content-Type: application/json
+
+{
+  "match": "Bork",
+  "reward": 10,
+  "reward_type": "%"
+}
+
+###
+POST http://localhost:8080/api/orders
+Content-Type:application/json
+
+{
+  "order": "4561261212345467",
+  "goods": [
+    {
+      "description": "ЧайникBork",
+      "price": 7000.1111
+    }
+  ]
+}
+
+###
+GET http://localhost:8080/api/orders/4561261212345467
+Content-Type: application/json
+
+
