@@ -6,8 +6,6 @@ import (
 	"os"
 
 	"github.com/caarlos0/env/v6"
-
-	_ "github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 
 	"github.com/soltanat/go-diploma-1/internal/logger"

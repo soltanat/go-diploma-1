@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/theplant/luhn"
-	_ "github.com/theplant/luhn"
 )
 
 //go:generate go-enum --marshal

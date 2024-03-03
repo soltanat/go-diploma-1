@@ -7,12 +7,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/labstack/echo/v4"
+	"github.com/lestrrat-go/jwx/jwt"
 	middleware "github.com/oapi-codegen/echo-middleware"
 	echo2 "github.com/oapi-codegen/runtime/strictmiddleware/echo"
-
-	"github.com/getkin/kin-openapi/openapi3filter"
-	"github.com/lestrrat-go/jwx/jwt"
 )
 
 // JWSValidator is used to validate JWS payloads and return a JWT if they're

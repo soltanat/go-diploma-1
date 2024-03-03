@@ -6,10 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/soltanat/go-diploma-1/internal/usecases/storager"
-
 	"github.com/soltanat/go-diploma-1/internal/clients/accrual"
 	"github.com/soltanat/go-diploma-1/internal/entities"
+	"github.com/soltanat/go-diploma-1/internal/usecases/storager"
 )
 
 type AccrualStorage struct {
