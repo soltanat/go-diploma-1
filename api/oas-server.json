@@ -26,14 +26,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/User"
-                }
-              }
-            }
+            "description": "OK"
           },
           "400": {
             "description": "Bad Request"
@@ -89,10 +82,11 @@
         "operationId": "CreateOrder",
         "security": [
           {
-            "ApiKeyAuth": []
+            "BearerAuth": [
+            ]
           }
         ],
-        "description": "Load order",
+        "description": "Create order",
         "requestBody": {
           "required": true,
           "content": {
@@ -131,7 +125,7 @@
         "operationId": "GetOrders",
         "security": [
           {
-            "ApiKeyAuth": []
+            "BearerAuth": []
           }
         ],
         "description": "Get orders",
@@ -161,12 +155,12 @@
         }
       }
     },
-    "/api/user/balance/": {
+    "/api/user/balance": {
       "get": {
         "operationId": "GetBalance",
         "security": [
           {
-            "ApiKeyAuth": []
+            "BearerAuth": []
           }
         ],
         "description": "Get balance",
@@ -206,7 +200,7 @@
         "operationId": "Withdraw",
         "security": [
           {
-            "ApiKeyAuth": []
+            "BearerAuth": []
           }
         ],
         "description": "Withdraw balance",
@@ -255,7 +249,7 @@
         "operationId": "GetWithdrawals",
         "security": [
           {
-            "ApiKeyAuth": []
+            "BearerAuth": []
           }
         ],
         "description": "Get withdrawals",
@@ -337,8 +331,7 @@
             "type": "string"
           },
           "uploaded_at": {
-            "type": "string",
-            "format": "date-time"
+            "type": "string"
           }
         }
       },
@@ -364,10 +357,10 @@
       }
     },
     "securitySchemes": {
-      "ApiKeyAuth": {
-        "type": "apiKey",
-        "name": "Authorization",
-        "in": "header"
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   }

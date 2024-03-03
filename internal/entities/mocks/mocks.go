@@ -196,6 +196,21 @@ func (m *MockWithdrawalUseCase) EXPECT() *MockWithdrawalUseCaseMockRecorder {
 	return m.recorder
 }
 
+// Count mocks base method.
+func (m *MockWithdrawalUseCase) Count(ctx context.Context, userID entities.Login) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Count", ctx, userID)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Count indicates an expected call of Count.
+func (mr *MockWithdrawalUseCaseMockRecorder) Count(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockWithdrawalUseCase)(nil).Count), ctx, userID)
+}
+
 // List mocks base method.
 func (m *MockWithdrawalUseCase) List(ctx context.Context, userID entities.Login) ([]entities.Withdrawal, error) {
 	m.ctrl.T.Helper()
@@ -223,4 +238,56 @@ func (m *MockWithdrawalUseCase) Withdraw(ctx context.Context, userID entities.Lo
 func (mr *MockWithdrawalUseCaseMockRecorder) Withdraw(ctx, userID, orderNumber, amount any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Withdraw", reflect.TypeOf((*MockWithdrawalUseCase)(nil).Withdraw), ctx, userID, orderNumber, amount)
+}
+
+// MockPasswordHasher is a mock of PasswordHasher interface.
+type MockPasswordHasher struct {
+	ctrl     *gomock.Controller
+	recorder *MockPasswordHasherMockRecorder
+}
+
+// MockPasswordHasherMockRecorder is the mock recorder for MockPasswordHasher.
+type MockPasswordHasherMockRecorder struct {
+	mock *MockPasswordHasher
+}
+
+// NewMockPasswordHasher creates a new mock instance.
+func NewMockPasswordHasher(ctrl *gomock.Controller) *MockPasswordHasher {
+	mock := &MockPasswordHasher{ctrl: ctrl}
+	mock.recorder = &MockPasswordHasherMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockPasswordHasher) EXPECT() *MockPasswordHasherMockRecorder {
+	return m.recorder
+}
+
+// Compare mocks base method.
+func (m *MockPasswordHasher) Compare(hashedPwd, plainPwd []byte) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Compare", hashedPwd, plainPwd)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Compare indicates an expected call of Compare.
+func (mr *MockPasswordHasherMockRecorder) Compare(hashedPwd, plainPwd any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Compare", reflect.TypeOf((*MockPasswordHasher)(nil).Compare), hashedPwd, plainPwd)
+}
+
+// Hash mocks base method.
+func (m *MockPasswordHasher) Hash(pwd []byte) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Hash", pwd)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Hash indicates an expected call of Hash.
+func (mr *MockPasswordHasherMockRecorder) Hash(pwd any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Hash", reflect.TypeOf((*MockPasswordHasher)(nil).Hash), pwd)
 }

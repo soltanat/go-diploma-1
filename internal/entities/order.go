@@ -1,10 +1,10 @@
 package entities
 
 import (
-	"fmt"
+	"time"
+
 	"github.com/theplant/luhn"
 	_ "github.com/theplant/luhn"
-	"time"
 )
 
 //go:generate go-enum --marshal
@@ -74,7 +74,7 @@ type OrderNumber int
 
 func (n OrderNumber) Validate() error {
 	if !luhn.Valid(int(n)) {
-		return ValidationError{Err: fmt.Errorf("invalid order number: %d", n)}
+		return InvalidOrderNumberError{}
 	}
 	return nil
 }

@@ -63,25 +63,37 @@ func (u *WithdrawUseCase) Withdraw(
 
 	user, err := u.userStorager.Get(ctx, tx, userID)
 	if err != nil {
-		tx.Rollback(ctx)
+		err = tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 
 	if err := user.Balance.Sub(&amount); err != nil {
-		tx.Rollback(ctx)
+		err = tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 
 	err = u.userStorager.Update(ctx, tx, user)
 	if err != nil {
-		tx.Rollback(ctx)
+		err = tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 
 	withdrawal := entities.NewWithdrawal(orderNumber, amount, userID)
 	err = u.withdrawalStorager.Save(ctx, tx, withdrawal)
 	if err != nil {
-		tx.Rollback(ctx)
+		err = tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 

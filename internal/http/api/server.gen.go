@@ -24,7 +24,7 @@ import (
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 
-	// (GET /api/user/balance/)
+	// (GET /api/user/balance)
 	GetBalance(ctx echo.Context) error
 
 	// (POST /api/user/balance/withdraw)
@@ -55,7 +55,7 @@ type ServerInterfaceWrapper struct {
 func (w *ServerInterfaceWrapper) GetBalance(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(ApiKeyAuthScopes, []string{})
+	ctx.Set(BearerAuthScopes, []string{})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetBalance(ctx)
@@ -66,7 +66,7 @@ func (w *ServerInterfaceWrapper) GetBalance(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) Withdraw(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(ApiKeyAuthScopes, []string{})
+	ctx.Set(BearerAuthScopes, []string{})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.Withdraw(ctx)
@@ -86,7 +86,7 @@ func (w *ServerInterfaceWrapper) LoginUser(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) GetOrders(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(ApiKeyAuthScopes, []string{})
+	ctx.Set(BearerAuthScopes, []string{})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetOrders(ctx)
@@ -97,7 +97,7 @@ func (w *ServerInterfaceWrapper) GetOrders(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) CreateOrder(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(ApiKeyAuthScopes, []string{})
+	ctx.Set(BearerAuthScopes, []string{})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.CreateOrder(ctx)
@@ -117,7 +117,7 @@ func (w *ServerInterfaceWrapper) RegisterUser(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) GetWithdrawals(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(ApiKeyAuthScopes, []string{})
+	ctx.Set(BearerAuthScopes, []string{})
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetWithdrawals(ctx)
@@ -152,7 +152,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/api/user/balance/", wrapper.GetBalance)
+	router.GET(baseURL+"/api/user/balance", wrapper.GetBalance)
 	router.POST(baseURL+"/api/user/balance/withdraw", wrapper.Withdraw)
 	router.POST(baseURL+"/api/user/login", wrapper.LoginUser)
 	router.GET(baseURL+"/api/user/orders", wrapper.GetOrders)
@@ -403,13 +403,12 @@ type RegisterUserResponseObject interface {
 	VisitRegisterUserResponse(w http.ResponseWriter) error
 }
 
-type RegisterUser200JSONResponse User
+type RegisterUser200Response struct {
+}
 
-func (response RegisterUser200JSONResponse) VisitRegisterUserResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
+func (response RegisterUser200Response) VisitRegisterUserResponse(w http.ResponseWriter) error {
 	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+	return nil
 }
 
 type RegisterUser400Response struct {
@@ -479,7 +478,7 @@ func (response GetWithdrawals500Response) VisitGetWithdrawalsResponse(w http.Res
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
-	// (GET /api/user/balance/)
+	// (GET /api/user/balance)
 	GetBalance(ctx context.Context, request GetBalanceRequestObject) (GetBalanceResponseObject, error)
 
 	// (POST /api/user/balance/withdraw)
@@ -702,21 +701,21 @@ func (sh *strictHandler) GetWithdrawals(ctx echo.Context) error {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

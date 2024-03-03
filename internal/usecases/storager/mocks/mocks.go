@@ -122,18 +122,18 @@ func (mr *MockOrderStoragerMockRecorder) Get(ctx, tx, number any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockOrderStorager) List(ctx context.Context, tx storager.Tx, userID *entities.Login) ([]entities.Order, error) {
+func (m *MockOrderStorager) List(ctx context.Context, tx storager.Tx, userID *entities.Login, status *[]entities.OrderStatus) ([]entities.Order, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "List", ctx, tx, userID)
+	ret := m.ctrl.Call(m, "List", ctx, tx, userID, status)
 	ret0, _ := ret[0].([]entities.Order)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // List indicates an expected call of List.
-func (mr *MockOrderStoragerMockRecorder) List(ctx, tx, userID any) *gomock.Call {
+func (mr *MockOrderStoragerMockRecorder) List(ctx, tx, userID, status any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockOrderStorager)(nil).List), ctx, tx, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockOrderStorager)(nil).List), ctx, tx, userID, status)
 }
 
 // Save mocks base method.
@@ -279,6 +279,21 @@ func NewMockWithdrawalStorager(ctrl *gomock.Controller) *MockWithdrawalStorager 
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockWithdrawalStorager) EXPECT() *MockWithdrawalStoragerMockRecorder {
 	return m.recorder
+}
+
+// Count mocks base method.
+func (m *MockWithdrawalStorager) Count(ctx context.Context, tx storager.Tx, userID entities.Login) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Count", ctx, tx, userID)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Count indicates an expected call of Count.
+func (mr *MockWithdrawalStoragerMockRecorder) Count(ctx, tx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockWithdrawalStorager)(nil).Count), ctx, tx, userID)
 }
 
 // List mocks base method.

@@ -3,9 +3,10 @@ package external
 import (
 	"context"
 	"fmt"
-	"github.com/soltanat/go-diploma-1/internal/usecases/storager"
 	"net/http"
 	"strconv"
+
+	"github.com/soltanat/go-diploma-1/internal/usecases/storager"
 
 	"github.com/soltanat/go-diploma-1/internal/clients/accrual"
 	"github.com/soltanat/go-diploma-1/internal/entities"
@@ -41,9 +42,7 @@ func (s *AccrualStorage) Get(ctx context.Context, number entities.OrderNumber) (
 		currency = &currencyPtr
 	}
 
-	var status entities.AccrualOrderStatus
-
-	status = entities.AccrualOrderStatus(*accrualOrder.JSON200.Status)
+	status := entities.AccrualOrderStatus(*accrualOrder.JSON200.Status)
 	if !status.IsValid() {
 		return nil, fmt.Errorf("accrual oreder invalid status: %s", *accrualOrder.JSON200.Status)
 	}

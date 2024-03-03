@@ -7,9 +7,12 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/labstack/echo/v4"
+	middleware "github.com/oapi-codegen/echo-middleware"
+	echo2 "github.com/oapi-codegen/runtime/strictmiddleware/echo"
+
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/lestrrat-go/jwx/jwt"
-	middleware "github.com/oapi-codegen/echo-middleware"
 )
 
 // JWSValidator is used to validate JWS payloads and return a JWT if they're
@@ -18,9 +21,9 @@ type JWSValidator interface {
 	ValidateJWS(jws string) (jwt.Token, error)
 }
 
-const JWTClaimsContextKey = "jwt_claims"
+const JWTClaimsContextKey = "subject"
 
-var userIDKey = struct{}{}
+var userIDKey = "subject"
 
 var (
 	ErrNoAuthHeader      = errors.New("Authorization header is missing")
@@ -55,20 +58,20 @@ func NewAuthenticator(v JWSValidator) openapi3filter.AuthenticationFunc {
 func Authenticate(v JWSValidator, ctx context.Context, input *openapi3filter.AuthenticationInput) error {
 	// Our security scheme is named BearerAuth, ensure this is the case
 	if input.SecuritySchemeName != "BearerAuth" {
-		return fmt.Errorf("security scheme %s != 'BearerAuth'", input.SecuritySchemeName)
+		return echo.NewHTTPError(http.StatusUnauthorized, "invalid security scheme")
 	}
 
 	// Now, we need to get the JWS from the request, to match the request expectations
 	// against request contents.
 	jws, err := GetJWSFromRequest(input.RequestValidationInput.Request)
 	if err != nil {
-		return fmt.Errorf("getting jws: %w", err)
+		return echo.NewHTTPError(http.StatusUnauthorized, "invalid JWS")
 	}
 
 	// if the JWS is valid, we have a JWT, which will contain a bunch of claims.
 	token, err := v.ValidateJWS(jws)
 	if err != nil {
-		return fmt.Errorf("validating JWS: %w", err)
+		return echo.NewHTTPError(http.StatusUnauthorized, "invalid JWS")
 	}
 
 	// We've got a valid token now, and we can look into its claims to see whether
@@ -81,58 +84,41 @@ func Authenticate(v JWSValidator, ctx context.Context, input *openapi3filter.Aut
 
 	// Set the property on the echo context so the handler is able to
 	// access the claims data we generate in here.
+
 	eCtx := middleware.GetEchoContext(ctx)
-	eCtx.Set(JWTClaimsContextKey, token)
+	eCtx.Set(userIDKey, token.Subject())
+
+	//input.RequestValidationInput.Request.Context()
+
+	//sub := token.Subject()
+	//rCtx := eCtx.Request().Context()
+	//ctx = context.WithValue(rCtx, userIDKey, sub)
+	////input.RequestValidationInput.Request.WithContext(ctx)
+	//
+	//eCtx.SetRequest(eCtx.Request().WithContext(ctx))
+	//
+	//v1 := eCtx.Request().Context().Value(userIDKey)
+	//fmt.Println(v1)
 
 	return nil
 }
 
-// GetClaimsFromToken returns a list of claims from the token. We store these
-// as a list under the "perms" claim, short for permissions, to keep the token
-// shorter.
-//func GetClaimsFromToken(t jwt.Token) ([]string, error) {
-//	rawPerms, found := t.Get(PermissionsClaim)
-//	if !found {
-//		// If the perms aren't found, it means that the token has none, but it has
-//		// passed signature validation by now, so it's a valid token, so we return
-//		// the empty list.
-//		return make([]string, 0), nil
-//	}
-//
-//	// rawPerms will be an untyped JSON list, so we need to convert it to
-//	// a string list.
-//	rawList, ok := rawPerms.([]interface{})
-//	if !ok {
-//		return nil, fmt.Errorf("'%s' claim is unexpected type'", PermissionsClaim)
-//	}
-//
-//	claims := make([]string, len(rawList))
-//
-//	for i, rawClaim := range rawList {
-//		var ok bool
-//		claims[i], ok = rawClaim.(string)
-//		if !ok {
-//			return nil, fmt.Errorf("%s[%d] is not a string", PermissionsClaim, i)
-//		}
-//	}
-//	return claims, nil
-//}
+var userIDKeyStruct = struct{}{}
 
-//func CheckTokenClaims(expectedClaims []string, t jwt.Token) error {
-//	claims, err := GetClaimsFromToken(t)
-//	if err != nil {
-//		return fmt.Errorf("getting claims from token: %w", err)
-//	}
-//	// Put the claims into a map, for quick access.
-//	claimsMap := make(map[string]bool, len(claims))
-//	for _, c := range claims {
-//		claimsMap[c] = true
-//	}
-//
-//	for _, e := range expectedClaims {
-//		if !claimsMap[e] {
-//			return ErrClaimsInvalid
-//		}
-//	}
-//	return nil
-//}
+func StrictMiddlewareUserIDTransfer(f echo2.StrictEchoHandlerFunc, operationID string) echo2.StrictEchoHandlerFunc {
+	return func(ctx echo.Context, request interface{}) (response interface{}, err error) {
+		value := ctx.Get(userIDKey)
+		if value == nil {
+		} else {
+			if _, ok := value.(string); !ok {
+				return nil, fmt.Errorf("user_id is not a string")
+			}
+		}
+
+		rCtx := ctx.Request().Context()
+		rCtx = context.WithValue(rCtx, userIDKeyStruct, value)
+		ctx.SetRequest(ctx.Request().WithContext(rCtx))
+
+		return f(ctx, request)
+	}
+}

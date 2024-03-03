@@ -14,7 +14,7 @@ var log zerolog.Logger
 func Get() zerolog.Logger {
 	once.Do(func() {
 		log = zerolog.New(os.Stdout).
-			Level(zerolog.InfoLevel).
+			Level(zerolog.DebugLevel).
 			With().
 			Timestamp().
 			Logger()

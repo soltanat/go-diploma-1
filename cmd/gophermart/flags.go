@@ -3,8 +3,9 @@ package main
 import (
 	"errors"
 	"flag"
-	"github.com/caarlos0/env/v6"
 	"os"
+
+	"github.com/caarlos0/env/v6"
 
 	_ "github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
@@ -28,10 +29,10 @@ func parseFlags() {
 	l := logger.Get()
 
 	flag.StringVar(&flagAddr, "a", "localhost:8081", "address and port metrics requests server")
-	flag.StringVar(&flagDBAddr, "d", "postgres://postgres:postgres@localhost:5432?sslmode=disable&search_path=service_diploma_1", "database dsn")
-	flag.StringVar(&flagAccrualAddr, "r", "localhost:8080", "accrual system address")
+	flag.StringVar(&flagDBAddr, "d", "postgres://postgres:postgres@localhost:5432?sslmode=disable", "database dsn")
+	flag.StringVar(&flagAccrualAddr, "r", "http://localhost:8080", "accrual system address")
 	flag.IntVar(&flagAccrualRateLimit, "l", 2, "accrual rate limit")
-	flag.StringVar(&flagKey, "k", "super-secret", "key for signature")
+	flag.StringVar(&flagKey, "k", "very-secret-key", "key for signature")
 
 	flag.Parse()
 

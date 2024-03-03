@@ -4,11 +4,11 @@ import "fmt"
 
 type User struct {
 	Login    Login
-	Password string
+	Password []byte
 	Balance  Currency
 }
 
-func NewUser(login Login, password string) *User {
+func NewUser(login Login, password []byte) *User {
 	return &User{
 		Login:    login,
 		Password: password,

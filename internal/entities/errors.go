@@ -86,3 +86,9 @@ type OutOfBalanceError struct{}
 func (e OutOfBalanceError) Error() string {
 	return "out of balance"
 }
+
+type InvalidOrderNumberError struct{}
+
+func (e InvalidOrderNumberError) Error() string {
+	return "invalid order number"
+}

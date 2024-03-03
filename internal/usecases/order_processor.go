@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/soltanat/go-diploma-1/internal/logger"
+
 	"github.com/soltanat/go-diploma-1/internal/entities"
 	"github.com/soltanat/go-diploma-1/internal/usecases/storager"
 )
@@ -41,6 +43,8 @@ func NewOrderProcessor(
 }
 
 func (u *OrderProcessor) Produce(ctx context.Context) error {
+	l := logger.Get()
+	l.Debug().Msg("start produce orders")
 	orders, err := u.orderStorager.List(
 		ctx, nil, nil, &[]entities.OrderStatus{entities.OrderStatusNEW, entities.OrderStatusPROCESSING},
 	)
@@ -50,6 +54,7 @@ func (u *OrderProcessor) Produce(ctx context.Context) error {
 	for _, order := range orders {
 		u.orders <- order
 	}
+	l.Debug().Msgf("produced %d orders", len(orders))
 	return nil
 }
 
@@ -62,8 +67,10 @@ func (u *OrderProcessor) Run(ctx context.Context) {
 		if ctx.Err() != nil {
 			return
 		}
+		l := logger.Get()
+		l.Debug().Msgf("start process order %d", order.Number)
 		if err := u.ProcessOrder(ctx, order.Number); err != nil {
-			//	TODO: что с ошибками
+			l.Error().Err(err).Msgf("failed process order %d", order.Number)
 		}
 	}
 }
@@ -85,45 +92,68 @@ func (u *OrderProcessor) ProcessOrder(ctx context.Context, number entities.Order
 
 	order, err := u.orderStorager.Get(ctx, tx, number)
 	if err != nil {
-		tx.Rollback(ctx)
+		err = tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 
 	if order.IsProcessed() {
-		tx.Rollback(ctx)
+		err = tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
 	user, err := u.userStorager.Get(ctx, tx, order.UserID)
 	if err != nil {
-		tx.Rollback(ctx)
+		err = tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 
 	accrualOrder, err := u.accrualStorager.Get(ctx, number)
 	if err != nil {
-		tx.Rollback(ctx)
+		err = tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 
 	updated := order.UpdateWithAccrualOrder(accrualOrder)
 
 	if !updated {
-		tx.Rollback(ctx)
+		err = tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
-	user.Balance.Add(accrualOrder.Accrual)
+	if accrualOrder.Accrual != nil {
+		user.Balance.Add(accrualOrder.Accrual)
+	}
 
 	err = u.userStorager.Update(ctx, tx, user)
 	if err != nil {
-		tx.Rollback(ctx)
+		err = tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 
 	err = u.orderStorager.Update(ctx, tx, order)
 	if err != nil {
-		tx.Rollback(ctx)
+		err = tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 

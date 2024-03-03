@@ -1,5 +1,5 @@
 package: api
-output: ./internal/requests/api/server.gen.go
+output: ./internal/http/api/server.gen.go
 generate:
   echo-server: true
   strict-server: true

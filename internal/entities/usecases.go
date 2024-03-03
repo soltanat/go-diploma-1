@@ -22,3 +22,8 @@ type WithdrawalUseCase interface {
 	List(ctx context.Context, userID Login) ([]Withdrawal, error)
 	Withdraw(ctx context.Context, userID Login, orderNumber OrderNumber, amount Currency) error
 }
+
+type PasswordHasher interface {
+	Hash(pwd []byte) ([]byte, error)
+	Compare(hashedPwd []byte, plainPwd []byte) bool
+}

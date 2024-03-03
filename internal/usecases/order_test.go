@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
+
 	usecasesmocks "github.com/soltanat/go-diploma-1/internal/entities/mocks"
 
 	"github.com/stretchr/testify/assert"
@@ -27,13 +29,16 @@ func TestOrderUseCase_CreateOrder(t *testing.T) {
 	now := time.Now()
 	entities.Now = func() time.Time { return now }
 
+	hPassword, err := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
+	assert.NoError(t, err)
+
 	t.Run("Valid OrderNumber Creation", func(t *testing.T) {
-		orderNumber := entities.OrderNumber(1)
+		orderNumber := entities.OrderNumber(4561261212345467)
 		userID := entities.Login("user")
 
 		returnUser := &entities.User{
 			Login:    userID,
-			Password: "password",
+			Password: hPassword,
 			Balance: entities.Currency{
 				Whole:   0,
 				Decimal: 0,
@@ -63,16 +68,16 @@ func TestOrderUseCase_CreateOrder(t *testing.T) {
 	})
 
 	t.Run("OrderNumber Validation Error", func(t *testing.T) {
-		orderNumber := entities.OrderNumber(0)
+		orderNumber := entities.OrderNumber(123)
 		userID := entities.Login("user")
 
 		err = orderUseCase.CreateOrder(context.Background(), orderNumber, userID)
 		assert.Error(t, err)
-		assert.ErrorAs(t, err, &entities.ValidationError{Err: fmt.Errorf("invalid order number: %d", orderNumber)})
+		assert.ErrorAs(t, err, &entities.InvalidOrderNumberError{})
 	})
 
-	t.Run("OrderNumber Validation Error", func(t *testing.T) {
-		orderNumber := entities.OrderNumber(1)
+	t.Run("Login Validation Error", func(t *testing.T) {
+		orderNumber := entities.OrderNumber(4561261212345467)
 		userID := entities.Login("")
 
 		err = orderUseCase.CreateOrder(context.Background(), orderNumber, userID)
@@ -81,7 +86,7 @@ func TestOrderUseCase_CreateOrder(t *testing.T) {
 	})
 
 	t.Run("OrderNumber Creation Error Not found user", func(t *testing.T) {
-		orderNumber := entities.OrderNumber(1)
+		orderNumber := entities.OrderNumber(4561261212345467)
 		userID := entities.Login("user")
 
 		userStorage.EXPECT().Get(gomock.Any(), nil, userID).Return(nil, entities.NotFoundError{})
@@ -92,12 +97,12 @@ func TestOrderUseCase_CreateOrder(t *testing.T) {
 	})
 
 	t.Run("OrderNumber Creation Error OrderNumber already exists", func(t *testing.T) {
-		orderNumber := entities.OrderNumber(1)
+		orderNumber := entities.OrderNumber(4561261212345467)
 		userID := entities.Login("user")
 
 		returnUser := &entities.User{
 			Login:    userID,
-			Password: "password",
+			Password: hPassword,
 			Balance: entities.Currency{
 				Whole:   0,
 				Decimal: 0,
@@ -122,12 +127,12 @@ func TestOrderUseCase_CreateOrder(t *testing.T) {
 	})
 
 	t.Run("OrderNumber Creation Error Already created another user", func(t *testing.T) {
-		orderNumber := entities.OrderNumber(1)
+		orderNumber := entities.OrderNumber(4561261212345467)
 		userID := entities.Login("user")
 
 		returnUser := &entities.User{
 			Login:    userID,
-			Password: "password",
+			Password: hPassword,
 			Balance: entities.Currency{
 				Whole:   0,
 				Decimal: 0,
@@ -192,7 +197,7 @@ func TestOrderUseCase_ListOrdersByUserID(t *testing.T) {
 			},
 		}
 
-		orderStorage.EXPECT().List(gomock.Any(), nil, &userID).Return(returnOrders, nil)
+		orderStorage.EXPECT().List(gomock.Any(), nil, &userID, nil).Return(returnOrders, nil)
 
 		result, err := orderUseCase.ListOrdersByUserID(context.Background(), userID)
 		assert.NoError(t, err)

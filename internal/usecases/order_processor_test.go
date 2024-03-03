@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
@@ -24,9 +26,11 @@ func TestOrderProcessor_ProcessOrder(t *testing.T) {
 	entities.Now = func() time.Time { return now }
 
 	t.Run("Valid OrderNumber Process (Accrual Processed)", func(t *testing.T) {
-		orderNumber := entities.OrderNumber(1)
+		orderNumber := entities.OrderNumber(4561261212345467)
 
 		tx := mocks.NewMockTx(gomock.NewController(t))
+
+		tx.EXPECT().Begin(gomock.Any())
 
 		orderStorage.EXPECT().Tx(gomock.Any()).Return(tx)
 
@@ -42,9 +46,12 @@ func TestOrderProcessor_ProcessOrder(t *testing.T) {
 		}
 		orderStorage.EXPECT().Get(gomock.Any(), tx, orderNumber).Return(&returnOrder, nil)
 
+		hPassword, err := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
+		assert.NoError(t, err)
+
 		returnUser := entities.User{
 			Login:    entities.Login("user"),
-			Password: "password",
+			Password: hPassword,
 			Balance: entities.Currency{
 				Whole:   0,
 				Decimal: 0,
@@ -79,7 +86,7 @@ func TestOrderProcessor_ProcessOrder(t *testing.T) {
 
 		tx.EXPECT().Commit(gomock.Any()).Return(nil)
 
-		err := orderUseCase.ProcessOrder(context.Background(), orderNumber)
+		err = orderUseCase.ProcessOrder(context.Background(), orderNumber)
 		assert.NoError(t, err)
 	})
 }

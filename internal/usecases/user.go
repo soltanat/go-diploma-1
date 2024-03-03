@@ -11,19 +11,33 @@ import (
 
 type UserUseCase struct {
 	storager storager.UserStorager
+	hasher   entities.PasswordHasher
 }
 
-func NewUserUseCase(storager storager.UserStorager) (*UserUseCase, error) {
+func NewUserUseCase(storager storager.UserStorager, hasher entities.PasswordHasher) (*UserUseCase, error) {
 	if storager == nil {
 		return nil, fmt.Errorf("userStorager is nil")
 	}
+	if hasher == nil {
+		return nil, fmt.Errorf("passwordHasher is nil")
+	}
 	return &UserUseCase{
 		storager: storager,
+		hasher:   hasher,
 	}, nil
 }
 
 func (u *UserUseCase) Register(ctx context.Context, login entities.Login, password string) error {
-	user := entities.NewUser(login, password)
+	if password == "" {
+		return entities.ValidationError{Err: fmt.Errorf("password is empty")}
+	}
+
+	hashPassword, err := u.hasher.Hash([]byte(password))
+	if err != nil {
+		return err
+	}
+
+	user := entities.NewUser(login, hashPassword)
 	if err := user.Validate(); err != nil {
 		return err
 	}
@@ -50,7 +64,7 @@ func (u *UserUseCase) Authenticate(ctx context.Context, login entities.Login, pa
 		return nil, err
 	}
 
-	if user.Password != password {
+	if !u.hasher.Compare(user.Password, []byte(password)) {
 		return nil, entities.InvalidPasswordError{}
 	}
 

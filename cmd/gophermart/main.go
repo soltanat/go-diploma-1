@@ -2,9 +2,17 @@ package main
 
 import (
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/cenkalti/backoff/v4"
+	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
+	middleware "github.com/oapi-codegen/echo-middleware"
+
 	"github.com/soltanat/go-diploma-1/internal/clients/accrual"
 	"github.com/soltanat/go-diploma-1/internal/db"
 	"github.com/soltanat/go-diploma-1/internal/http"
@@ -15,10 +23,6 @@ import (
 	"github.com/soltanat/go-diploma-1/internal/storage/postgres"
 	"github.com/soltanat/go-diploma-1/internal/storage/retry"
 	"github.com/soltanat/go-diploma-1/internal/usecases"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 )
 
 func main() {
@@ -52,9 +56,9 @@ func main() {
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = 5 * time.Second
 
-	userStorage = retry.NewUserStorage(userStorage, b)
-	orderStorage = retry.NewOrderStorage(orderStorage, b)
-	withdrawalStorage = retry.NewWithdrawalStorage(withdrawalStorage, b)
+	userStorage = retry.NewUserStorage(userStorage)
+	orderStorage = retry.NewOrderStorage(orderStorage)
+	withdrawalStorage = retry.NewWithdrawalStorage(withdrawalStorage)
 
 	client, err := accrual.NewClientWithResponses(flagAccrualAddr)
 	if err != nil {
@@ -67,9 +71,10 @@ func main() {
 
 	accrualStorage = limit.NewLimitAccrualStorage(accrualStorage, flagAccrualRateLimit)
 
-	accrualStorage = retry.NewAccrualStorage(accrualStorage, b)
+	accrualStorage = retry.NewAccrualStorage(accrualStorage)
 
-	userUseCase, err := usecases.NewUserUseCase(userStorage)
+	hasher := usecases.NewPasswordHasher()
+	userUseCase, err := usecases.NewUserUseCase(userStorage, hasher)
 	if err != nil {
 		l.Fatal().Err(err)
 	}
@@ -91,9 +96,15 @@ func main() {
 
 	go func() {
 		for {
-			err := orderProcessor.Produce(ctx)
-			if err != nil {
-				l.Fatal().Err(err)
+			ticker := time.NewTicker(5 * time.Second)
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				err := orderProcessor.Produce(ctx)
+				if err != nil {
+					l.Fatal().Err(err)
+				}
 			}
 		}
 	}()
@@ -102,16 +113,33 @@ func main() {
 		orderProcessor.Run(ctx)
 	}()
 
+	tokenProvider := http.NewJWTProvider(flagKey, jwt.SigningMethodHS256)
+
 	handler := http.NewServerInterfaceWrapper(
 		userUseCase,
 		orderUseCase,
 		withdrawalUseCase,
-		http.NewJWTProvider(flagKey, jwt.SigningMethodHS256),
+		tokenProvider,
 	)
-	strictHandler := api.NewStrictHandler(handler, nil)
+	strictHandler := api.NewStrictHandler(handler, []api.StrictMiddlewareFunc{http.StrictMiddlewareUserIDTransfer})
+
+	spec, err := api.GetSwagger()
+	if err != nil {
+		return
+		//return nil, fmt.Errorf("loading spec: %w", err)
+	}
+
+	validator := middleware.OapiRequestValidatorWithOptions(spec,
+		&middleware.Options{
+			Options: openapi3filter.Options{
+				AuthenticationFunc: http.NewAuthenticator(tokenProvider),
+			},
+		},
+	)
 
 	e := echo.New()
 	e.HideBanner = true
+	e.Use(validator)
 	api.RegisterHandlers(e, strictHandler)
 
 	go func() {

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
@@ -22,20 +24,26 @@ func TestWithdrawUseCase_Withdraw(t *testing.T) {
 	now := time.Now()
 	entities.Now = func() time.Time { return now }
 
+	hPassword, err := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
+	assert.NoError(t, err)
+
 	t.Run("Valid Withdrawal", func(t *testing.T) {
 		userID := entities.Login("user")
-		orderNumber := entities.OrderNumber(1)
+		orderNumber := entities.OrderNumber(4561261212345467)
 		sum := entities.Currency{
 			Whole:   20,
 			Decimal: 20,
 		}
 
 		tx := mocks.NewMockTx(gomock.NewController(t))
+
+		tx.EXPECT().Begin(gomock.Any())
+
 		userStorage.EXPECT().Tx(gomock.Any()).Return(tx)
 
 		returnUser := entities.User{
 			Login:    userID,
-			Password: "password",
+			Password: hPassword,
 			Balance: entities.Currency{
 				Whole:   100,
 				Decimal: 50,

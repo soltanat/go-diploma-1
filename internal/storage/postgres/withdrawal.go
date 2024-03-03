@@ -29,7 +29,7 @@ func (s *WithdrawalStorage) Save(ctx context.Context, tx storager.Tx, withdraw *
 
 	_, err := conn.Exec(
 		ctx,
-		`INSERT INTO service_diploma_1.withdrawals (number, whole, decimal, processed_at, user_id) VALUES ($1, $2, $3, $4, $5)`,
+		`INSERT INTO withdrawals (number, whole, decimal, processed_at, user_id) VALUES ($1, $2, $3, $4, $5)`,
 		withdraw.OrderNumber, withdraw.Sum.Whole, withdraw.Sum.Decimal, withdraw.ProcessedAt, withdraw.UserID,
 	)
 	if err != nil {
@@ -49,7 +49,7 @@ func (s *WithdrawalStorage) List(ctx context.Context, tx storager.Tx, userID ent
 		conn = tx.(*Tx).conn
 	}
 
-	rows, err := conn.Query(ctx, `SELECT number, whole, decimal, processed_at, user_id FROM service_diploma_1.withdrawals WHERE user_id = $1`, userID)
+	rows, err := conn.Query(ctx, `SELECT number, whole, decimal, processed_at, user_id FROM withdrawals WHERE user_id = $1`, userID)
 	if err != nil {
 		return nil, entities.StorageError{Err: err}
 	}
@@ -74,7 +74,7 @@ func (s *WithdrawalStorage) Count(ctx context.Context, tx storager.Tx, userID en
 	}
 
 	var count int
-	err := conn.QueryRow(ctx, `SELECT COUNT(*) FROM service_diploma_1.withdrawals WHERE user_id = $1`, userID).Scan(&count)
+	err := conn.QueryRow(ctx, `SELECT COUNT(*) FROM withdrawals WHERE user_id = $1`, userID).Scan(&count)
 	if err != nil {
 		return 0, entities.StorageError{Err: err}
 	}

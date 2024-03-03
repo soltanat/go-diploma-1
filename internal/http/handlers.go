@@ -2,12 +2,13 @@ package http
 
 import (
 	"context"
+	"errors"
 	"strconv"
-
-	"github.com/lestrrat-go/jwx/jwt"
+	"time"
 
 	"github.com/soltanat/go-diploma-1/internal/entities"
 	"github.com/soltanat/go-diploma-1/internal/http/api"
+	"github.com/soltanat/go-diploma-1/internal/logger"
 )
 
 type ServerInterfaceWrapper struct {
@@ -31,47 +32,51 @@ func NewServerInterfaceWrapper(
 	}
 }
 
-func (h *ServerInterfaceWrapper) GetBalance(ctx context.Context, request api.GetBalanceRequestObject) (api.GetBalanceResponseObject, error) {
-	userID := ctx.Value(userIDKey).(string)
+func (h *ServerInterfaceWrapper) RegisterUser(ctx context.Context, request api.RegisterUserRequestObject) (api.RegisterUserResponseObject, error) {
+	l := logger.Get()
 
-	user, err := h.userUseCase.GetUser(ctx, entities.Login(userID))
+	err := h.userUseCase.Register(ctx, entities.Login(request.Body.Login), request.Body.Password)
 	if err != nil {
-		//	TODO: что с ошибками
+		validationErr := &entities.ValidationError{}
+		if errors.As(err, validationErr) {
+			return api.RegisterUser400Response{}, nil
+		}
+		existErr := &entities.ExistUserError{}
+		if errors.As(err, existErr) {
+			return api.RegisterUser409Response{}, nil
+		}
+		l.Err(err).Msg("failed to register user")
+		return api.RegisterUser500Response{}, nil
 	}
 
-	countWithdrawals, err := h.withdrawalUseCase.Count(ctx, entities.Login(userID))
-	if err != nil {
-		//	TODO: что с ошибками
-	}
-
-	return api.GetBalance200JSONResponse{
-		Current:     user.Balance.String(),
-		Withdrawals: countWithdrawals,
-	}, nil
-}
-
-func (h *ServerInterfaceWrapper) Withdraw(ctx context.Context, request api.WithdrawRequestObject) (api.WithdrawResponseObject, error) {
-	userID := ctx.Value(userIDKey).(string)
-
-	err := h.withdrawalUseCase.Withdraw(
-		ctx, entities.Login(userID), entities.OrderNumber(request.Body.Order), entities.FromString(request.Body.Sum),
-	)
-	if err != nil {
-		//	TODO: что с ошибками
-	}
-
-	return api.Withdraw200Response{}, nil
+	return api.RegisterUser200Response{}, nil
 }
 
 func (h *ServerInterfaceWrapper) LoginUser(ctx context.Context, request api.LoginUserRequestObject) (api.LoginUserResponseObject, error) {
+	l := logger.Get()
+
 	_, err := h.userUseCase.Authenticate(ctx, entities.Login(request.Body.Login), request.Body.Password)
 	if err != nil {
-		//	TODO: что с ошибками
+		validationErr := &entities.ValidationError{}
+		if errors.As(err, validationErr) {
+			return api.LoginUser400Response{}, nil
+		}
+		notFoundErr := &entities.NotFoundError{}
+		if errors.As(err, notFoundErr) {
+			return api.LoginUser401Response{}, nil
+		}
+		pwdErr := &entities.InvalidPasswordError{}
+		if errors.As(err, pwdErr) {
+			return api.LoginUser401Response{}, nil
+		}
+		l.Err(err).Msg("failed to login user")
+		return api.LoginUser500Response{}, nil
 	}
 
 	token, err := h.tokenProvider.GenerateToken(request.Body.Login)
 	if err != nil {
-		//	TODO: что с ошибками
+		l.Err(err).Msg("failed to generate token")
+		return api.LoginUser500Response{}, nil
 	}
 
 	return api.LoginUser200Response{
@@ -81,12 +86,54 @@ func (h *ServerInterfaceWrapper) LoginUser(ctx context.Context, request api.Logi
 	}, nil
 }
 
+func (h *ServerInterfaceWrapper) CreateOrder(ctx context.Context, request api.CreateOrderRequestObject) (api.CreateOrderResponseObject, error) {
+	l := logger.Get()
+
+	userID := ctx.Value(userIDKeyStruct).(string)
+
+	orderNumber, err := strconv.Atoi(*request.Body)
+	if err != nil {
+		return api.CreateOrder400Response{}, nil
+	}
+
+	err = h.orderUseCase.CreateOrder(ctx, entities.OrderNumber(orderNumber), entities.Login(userID))
+	if err != nil {
+		existErr := &entities.ExistOrderError{}
+		if errors.As(err, existErr) {
+			return api.CreateOrder200Response{}, nil
+		}
+		validationErr := &entities.ValidationError{}
+		if errors.As(err, validationErr) {
+			return api.CreateOrder400Response{}, nil
+		}
+		existAnotherErr := &entities.OrderIsCreatedByAnotherUserError{}
+		if errors.As(err, existAnotherErr) {
+			return api.CreateOrder409Response{}, nil
+		}
+		orderNumberErr := &entities.InvalidOrderNumberError{}
+		if errors.As(err, orderNumberErr) {
+			return api.CreateOrder422Response{}, nil
+		}
+		l.Err(err).Msg("failed to create order")
+		return api.CreateOrder500Response{}, nil
+	}
+
+	return api.CreateOrder202Response{}, nil
+}
+
 func (h *ServerInterfaceWrapper) GetOrders(ctx context.Context, request api.GetOrdersRequestObject) (api.GetOrdersResponseObject, error) {
-	userID := ctx.Value(userIDKey).(string)
+	l := logger.Get()
+
+	userID := ctx.Value(userIDKeyStruct).(string)
 
 	oo, err := h.orderUseCase.ListOrdersByUserID(ctx, entities.Login(userID))
 	if err != nil {
-		//	TODO: что с ошибками
+		l.Err(err).Msg("failed to get orders")
+		return api.GetOrders500Response{}, nil
+	}
+
+	if len(oo) == 0 {
+		return api.GetOrders204Response{}, nil
 	}
 
 	response := api.GetOrders200JSONResponse{}
@@ -94,7 +141,7 @@ func (h *ServerInterfaceWrapper) GetOrders(ctx context.Context, request api.GetO
 		apiOrder := api.Order{
 			Number:     int(o.Number),
 			Status:     api.OrderStatus(o.Status.String()),
-			UploadedAt: o.UploadedAt,
+			UploadedAt: o.UploadedAt.Format(time.RFC3339),
 		}
 		if o.IsProcessed() {
 			accrual := o.Accrual.String()
@@ -106,36 +153,63 @@ func (h *ServerInterfaceWrapper) GetOrders(ctx context.Context, request api.GetO
 	return response, nil
 }
 
-func (h *ServerInterfaceWrapper) CreateOrder(ctx context.Context, request api.CreateOrderRequestObject) (api.CreateOrderResponseObject, error) {
-	userID := ctx.Value(userIDKey).(string)
+func (h *ServerInterfaceWrapper) GetBalance(ctx context.Context, request api.GetBalanceRequestObject) (api.GetBalanceResponseObject, error) {
+	l := logger.Get()
 
-	orderNumber, err := strconv.Atoi(*request.Body)
+	userID := ctx.Value(userIDKeyStruct).(string)
+
+	user, err := h.userUseCase.GetUser(ctx, entities.Login(userID))
 	if err != nil {
-		//	TODO: что с ошибками
+		l.Err(err).Msg("failed to get balance")
+		return api.GetBalance500Response{}, nil
 	}
 
-	err = h.orderUseCase.CreateOrder(ctx, entities.OrderNumber(orderNumber), entities.Login(userID))
+	countWithdrawals, err := h.withdrawalUseCase.Count(ctx, entities.Login(userID))
 	if err != nil {
-		//	TODO: что с ошибками
+		l.Err(err).Msg("failed to get balance")
+		return api.GetBalance500Response{}, nil
 	}
 
-	return api.CreateOrder200Response{}, nil
+	return api.GetBalance200JSONResponse{
+		Current:     user.Balance.String(),
+		Withdrawals: countWithdrawals,
+	}, nil
 }
 
-func (h *ServerInterfaceWrapper) RegisterUser(ctx context.Context, request api.RegisterUserRequestObject) (api.RegisterUserResponseObject, error) {
-	err := h.userUseCase.Register(ctx, entities.Login(request.Body.Login), request.Body.Password)
+func (h *ServerInterfaceWrapper) Withdraw(ctx context.Context, request api.WithdrawRequestObject) (api.WithdrawResponseObject, error) {
+	l := logger.Get()
+	userID := ctx.Value(userIDKeyStruct).(string)
+
+	err := h.withdrawalUseCase.Withdraw(
+		ctx, entities.Login(userID), entities.OrderNumber(request.Body.Order), entities.FromString(request.Body.Sum),
+	)
 	if err != nil {
-		//	TODO: что с ошибками
+		outOfBalanceErr := &entities.OutOfBalanceError{}
+		if errors.As(err, outOfBalanceErr) {
+			return api.Withdraw402Response{}, nil
+		}
+		orderNumberErr := &entities.InvalidOrderNumberError{}
+		if errors.As(err, orderNumberErr) {
+			return api.Withdraw422Response{}, nil
+		}
+		l.Err(err).Msg("failed to withdraw")
+		return api.Withdraw500Response{}, nil
 	}
-	return api.RegisterUser200JSONResponse{}, nil
+
+	return api.Withdraw200Response{}, nil
 }
 
 func (h *ServerInterfaceWrapper) GetWithdrawals(ctx context.Context, request api.GetWithdrawalsRequestObject) (api.GetWithdrawalsResponseObject, error) {
-	userID := ctx.Value(userIDKey).(string)
+	l := logger.Get()
+	userID := ctx.Value(userIDKeyStruct).(string)
 
 	ww, err := h.withdrawalUseCase.List(ctx, entities.Login(userID))
 	if err != nil {
-		//	TODO: что с ошибками
+		l.Err(err).Msg("failed to get withdrawals")
+		return api.GetWithdrawals500Response{}, nil
+	}
+	if len(ww) == 0 {
+		return api.GetWithdrawals204Response{}, nil
 	}
 
 	response := api.GetWithdrawals200JSONResponse{}
@@ -149,12 +223,4 @@ func (h *ServerInterfaceWrapper) GetWithdrawals(ctx context.Context, request api
 	}
 
 	return response, nil
-}
-
-func GetSubFromJWT(token string) (string, error) {
-	parsedToken, err := jwt.Parse([]byte(token))
-	if err != nil {
-		return "", err
-	}
-	return parsedToken.Subject(), nil
 }

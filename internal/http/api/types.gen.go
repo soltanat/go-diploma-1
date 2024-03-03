@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	ApiKeyAuthScopes = "ApiKeyAuth.Scopes"
+	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
 // Defines values for OrderStatus.
@@ -24,7 +24,7 @@ type Order struct {
 	Accrual    *string     `json:"accrual,omitempty"`
 	Number     int         `json:"number"`
 	Status     OrderStatus `json:"status"`
-	UploadedAt time.Time   `json:"uploaded_at"`
+	UploadedAt string      `json:"uploaded_at"`
 }
 
 // OrderStatus defines model for Order.Status.
