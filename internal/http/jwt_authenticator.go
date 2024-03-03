@@ -25,9 +25,9 @@ const JWTClaimsContextKey = "subject"
 var userIDKey = "subject"
 
 var (
-	ErrNoAuthHeader      = errors.New("Authorization header is missing")
-	ErrInvalidAuthHeader = errors.New("Authorization header is malformed")
-	ErrClaimsInvalid     = errors.New("Provided claims do not match expected scopes")
+	ErrNoAuthHeader      = errors.New("authorization header is missing")
+	ErrInvalidAuthHeader = errors.New("authorization header is malformed")
+	ErrClaimsInvalid     = errors.New("provided claims do not match expected scopes")
 )
 
 // GetJWSFromRequest extracts a JWS string from an Authorization: Bearer <jws> header
