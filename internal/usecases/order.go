@@ -51,10 +51,8 @@ func (u *OrderUseCase) CreateOrder(ctx context.Context, orderNumber entities.Ord
 			return entities.ExistOrderError{}
 		}
 		return entities.OrderIsCreatedByAnotherUserError{}
-	} else if err != nil {
-		if !errors.Is(err, entities.NotFoundError{}) {
-			return err
-		}
+	} else if !errors.Is(err, entities.NotFoundError{}) {
+		return err
 	}
 
 	order := entities.NewOrder(orderNumber, userID)

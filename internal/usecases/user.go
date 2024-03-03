@@ -44,7 +44,7 @@ func (u *UserUseCase) Register(ctx context.Context, login entities.Login, passwo
 
 	if _, err := u.storager.Get(ctx, nil, user.Login); err == nil {
 		return entities.ExistUserError{}
-	} else if err != nil && !errors.Is(err, entities.NotFoundError{}) {
+	} else if !errors.Is(err, entities.NotFoundError{}) {
 		return err
 	}
 
