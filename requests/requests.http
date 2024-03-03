@@ -141,7 +141,7 @@ Authorization: {{auth_token}}
 
 
 ### Accrual
-POST http://localhost:8080/api/goods HTTP/1.1
+POST http://localhost:8081/api/goods HTTP/1.1
 Content-Type: application/json
 
 {

@@ -174,15 +174,22 @@ func (h *ServerInterfaceWrapper) GetBalance(ctx context.Context, request api.Get
 		return api.GetBalance500Response{}, nil
 	}
 
-	countWithdrawals, err := h.withdrawalUseCase.Count(ctx, entities.Login(userID))
+	withdrawals, err := h.withdrawalUseCase.List(ctx, entities.Login(userID))
 	if err != nil {
-		l.Err(err).Msg("failed to get balance")
+		l.Err(err).Msgf("failed to get balance user %s", user.Login)
 		return api.GetBalance500Response{}, nil
 	}
 
+	withdrawn := entities.Currency{}
+	for _, w := range withdrawals {
+		withdrawn.Add(&w.Sum)
+	}
+
+	l.Debug().Str("handler", "GetBalance").Msgf("user %s balance %f", user.Login, user.Balance.Float())
+
 	return api.GetBalance200JSONResponse{
-		Current:     user.Balance.Float(),
-		Withdrawals: countWithdrawals,
+		Current:   user.Balance.Float(),
+		Withdrawn: withdrawn.Float(),
 	}, nil
 }
 

@@ -174,15 +174,16 @@
                 "schema": {
                   "required": [
                     "current",
-                    "withdrawals"
+                    "withdrawn"
                   ],
                   "properties": {
                     "current": {
                       "type": "number",
                       "format": "float"
                     },
-                    "withdrawals": {
-                      "type": "integer"
+                    "withdrawn": {
+                      "type": "number",
+                      "format": "float"
                     }
                   }
                 }
