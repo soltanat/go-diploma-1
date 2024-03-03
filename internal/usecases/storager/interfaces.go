@@ -15,7 +15,7 @@ type Tx interface {
 type OrderStorager interface {
 	Save(ctx context.Context, tx Tx, order *entities.Order) error
 	Get(ctx context.Context, tx Tx, number entities.OrderNumber) (*entities.Order, error)
-	List(ctx context.Context, tx Tx, userID *entities.Login) ([]entities.Order, error)
+	List(ctx context.Context, tx Tx, userID *entities.Login, status *[]entities.OrderStatus) ([]entities.Order, error)
 	Update(ctx context.Context, tx Tx, order *entities.Order) error
 	Tx(ctx context.Context) Tx
 }
@@ -30,6 +30,7 @@ type UserStorager interface {
 type WithdrawalStorager interface {
 	Save(ctx context.Context, tx Tx, withdraw *entities.Withdrawal) error
 	List(ctx context.Context, tx Tx, userID entities.Login) ([]entities.Withdrawal, error)
+	Count(ctx context.Context, tx Tx, userID entities.Login) (int, error)
 	Tx(ctx context.Context) Tx
 }
 
