@@ -1,0 +1,5 @@
+package: accrual
+output: ./internal/clients/accrual/client.gen.go
+generate:
+  models: true
+  client: true

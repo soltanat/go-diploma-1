@@ -4,9 +4,15 @@
     "title": "go-diploma-1",
     "version": "0.0.1"
   },
+  "servers": [
+    {
+      "url": "http://localhost:8081"
+    }
+  ],
   "paths": {
     "/api/user/register": {
       "post": {
+        "operationId": "RegisterUser",
         "description": "User registration",
         "requestBody": {
           "required": true,
@@ -43,6 +49,7 @@
     },
     "/api/user/login": {
       "post": {
+        "operationId": "LoginUser",
         "description": "User login",
         "requestBody": {
           "required": true,
@@ -56,14 +63,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
+            "headers": {
+              "Authorization": {
                 "schema": {
-                  "$ref": "#/components/schemas/User"
+                  "type": "string"
                 }
               }
-            }
+            },
+            "description": "OK"
           },
           "400": {
             "description": "Bad Request"
@@ -79,6 +86,7 @@
     },
     "/api/user/orders": {
       "post": {
+        "operationId": "CreateOrder",
         "security": [
           {
             "ApiKeyAuth": []
@@ -90,7 +98,7 @@
           "content": {
             "text/plain": {
               "schema": {
-                "type": "integer"
+                "type": "string"
               }
             }
           }
@@ -120,6 +128,7 @@
         }
       },
       "get": {
+        "operationId": "GetOrders",
         "security": [
           {
             "ApiKeyAuth": []
@@ -154,6 +163,7 @@
     },
     "/api/user/balance/": {
       "get": {
+        "operationId": "GetBalance",
         "security": [
           {
             "ApiKeyAuth": []
@@ -166,7 +176,18 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "integer"
+                  "required": [
+                    "current",
+                    "withdrawals"
+                  ],
+                  "properties": {
+                    "current": {
+                      "type": "string"
+                    },
+                    "withdrawals": {
+                      "type": "integer"
+                    }
+                  }
                 }
               }
             }
@@ -182,6 +203,7 @@
     },
     "/api/user/balance/withdraw": {
       "post": {
+        "operationId": "Withdraw",
         "security": [
           {
             "ApiKeyAuth": []
@@ -193,12 +215,16 @@
           "content": {
             "application/json": {
               "schema": {
+                "required": [
+                  "order",
+                  "sum"
+                ],
                 "properties": {
                   "order": {
-                    "type": "string"
+                    "type": "integer"
                   },
                   "sum": {
-                    "type": "integer"
+                    "type": "string"
                   }
                 }
               }
@@ -226,6 +252,7 @@
     },
     "/api/user/withdrawals": {
       "get": {
+        "operationId": "GetWithdrawals",
         "security": [
           {
             "ApiKeyAuth": []
@@ -260,9 +287,23 @@
     }
   },
   "components": {
+    "parameters": {
+      "AuthorizationHeader": {
+        "name": "Authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
     "schemas": {
       "User": {
         "type": "object",
+        "required": [
+          "login",
+          "password"
+        ],
         "properties": {
           "login": {
             "type": "string"
@@ -274,9 +315,14 @@
       },
       "Order": {
         "type": "object",
+        "required": [
+          "number",
+          "status",
+          "uploaded_at"
+        ],
         "properties": {
           "number": {
-            "type": "string"
+            "type": "integer"
           },
           "status": {
             "type": "string",
@@ -288,7 +334,7 @@
             ]
           },
           "accrual": {
-            "type": "integer"
+            "type": "string"
           },
           "uploaded_at": {
             "type": "string",
@@ -298,12 +344,17 @@
       },
       "Withdrawal": {
         "type": "object",
+        "required": [
+          "order",
+          "sum",
+          "processed_at"
+        ],
         "properties": {
           "order": {
-            "type": "string"
+            "type": "integer"
           },
           "sum": {
-            "type": "integer"
+            "type": "string"
           },
           "processed_at": {
             "type": "string",

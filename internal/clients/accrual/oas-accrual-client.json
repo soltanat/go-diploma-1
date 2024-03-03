@@ -7,6 +7,7 @@
   "paths": {
     "/api/orders/{number}": {
       "get": {
+        "operationId": "GetOrder",
         "description": "Get order",
         "parameters": [
           {
@@ -64,7 +65,7 @@
             ]
           },
           "accrual": {
-            "type": "integer"
+            "type": "number"
           }
         }
       }
