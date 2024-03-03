@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/soltanat/go-diploma-1/internal/logger"
 
 	"github.com/soltanat/go-diploma-1/internal/entities"
 	"github.com/soltanat/go-diploma-1/internal/usecases/storager"
@@ -72,8 +73,17 @@ func (u *UserUseCase) Authenticate(ctx context.Context, login entities.Login, pa
 }
 
 func (u *UserUseCase) GetUser(ctx context.Context, login entities.Login) (*entities.User, error) {
+	l := logger.Get()
 	if err := login.Validate(); err != nil {
 		return nil, err
 	}
-	return u.storager.Get(ctx, nil, login)
+
+	user, err := u.storager.Get(ctx, nil, login)
+	if err != nil {
+		return nil, err
+	}
+
+	l.Debug().Str("usecase", "GetUser").Msgf("found user %s balance %v", user.Login, user.Balance)
+
+	return user, nil
 }

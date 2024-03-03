@@ -14,7 +14,7 @@ Content-Type: application/json
 %}
 
 ### User Register 400
-POST http://localhost:8081/api/user/register
+POST http://localhost:8080/api/user/register
 Content-Type: application/json
 
 {
@@ -29,7 +29,7 @@ Content-Type: application/json
 %}
 
 ### User Register
-POST http://localhost:8081/api/user/register
+POST http://localhost:8080/api/user/register
 Content-Type: application/json
 
 {
@@ -44,7 +44,7 @@ Content-Type: application/json
 %}
 
 ### User Register Conflict
-POST http://localhost:8081/api/user/register
+POST http://localhost:8080/api/user/register
 Content-Type: application/json
 
 {
@@ -59,7 +59,7 @@ Content-Type: application/json
 %}
 
 ### Login 401
-POST http://localhost:8081/api/user/login
+POST http://localhost:8080/api/user/login
 Content-Type: application/json
 
 {
@@ -74,7 +74,7 @@ Content-Type: application/json
 %}
 
 ###
-POST http://localhost:8081/api/user/login
+POST http://localhost:8080/api/user/login
 Content-Type: application/json
 
 {
@@ -87,7 +87,7 @@ Content-Type: application/json
 %}
 
 ### Another User Register
-POST http://localhost:8081/api/user/register
+POST http://localhost:8080/api/user/register
 Content-Type: application/json
 
 {
@@ -96,7 +96,7 @@ Content-Type: application/json
 }
 
 ### Another User Login
-POST http://localhost:8081/api/user/login
+POST http://localhost:8080/api/user/login
 Content-Type: application/json
 
 {
@@ -109,32 +109,32 @@ Content-Type: application/json
 %}
 
 ###
-GET http://localhost:8081/api/user/balance
+GET http://localhost:8080/api/user/balance
 Authorization: {{auth_token}}
 
 ###
-GET http://localhost:8081/api/user/orders
+GET http://localhost:8080/api/user/orders
 Authorization: {{auth_token}}
 
 ### Create order
-POST http://localhost:8081/api/user/orders
+POST http://localhost:8080/api/user/orders
 Content-Type: text/plain
 Authorization: {{auth_token}}
 
 4561261212345467
 
 ###
-GET http://localhost:8081/api/user/withdrawals
+GET http://localhost:8080/api/user/withdrawals
 Authorization: {{auth_token}}
 
 ###
-POST http://localhost:8081/api/user/balance/withdraw
+POST http://localhost:8080/api/user/balance/withdraw
 Content-Type: application/json
 Authorization: {{auth_token}}
 
 {
-  "order": 4561261212345467,
-  "sum": "123.3"
+  "order": "4561261212345467",
+  "sum": 427.81
 }
 
 
@@ -154,7 +154,7 @@ Content-Type: application/json
 < {%
     client.global.set("order_number", "4561261212345467")
 %}
-POST http://localhost:8080/api/orders
+POST http://localhost:8081/api/orders
 Content-Type:application/json
 
 {
@@ -168,6 +168,6 @@ Content-Type:application/json
 }
 
 ### Accrual
-GET http://localhost:8080/api/orders/{{order_number}}
+GET http://localhost:8081/api/orders/{{order_number}}
 Content-Type: application/json
 

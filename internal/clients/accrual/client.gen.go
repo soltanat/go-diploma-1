@@ -227,11 +227,12 @@ func (r GetOrderResponse) StatusCode() int {
 
 // GetOrderWithResponse request returning *GetOrderResponse
 func (c *ClientWithResponses) GetOrderWithResponse(ctx context.Context, number string, reqEditors ...RequestEditorFn) (*GetOrderResponse, error) {
-	rsp, err := c.GetOrder(ctx, number, reqEditors...)
+	resp, err := c.GetOrder(ctx, number, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetOrderResponse(rsp)
+	defer resp.Body.Close()
+	return ParseGetOrderResponse(resp)
 }
 
 // ParseGetOrderResponse parses an HTTP response from a GetOrderWithResponse call

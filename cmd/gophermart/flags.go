@@ -26,9 +26,9 @@ type Config struct {
 func parseFlags() {
 	l := logger.Get()
 
-	flag.StringVar(&flagAddr, "a", "localhost:8081", "address and port metrics requests server")
+	flag.StringVar(&flagAddr, "a", "localhost:8080", "address and port metrics requests server")
 	flag.StringVar(&flagDBAddr, "d", "postgres://postgres:postgres@localhost:5432?sslmode=disable", "database dsn")
-	flag.StringVar(&flagAccrualAddr, "r", "http://localhost:8080", "accrual system address")
+	flag.StringVar(&flagAccrualAddr, "r", "http://localhost:8081", "accrual system address")
 	flag.IntVar(&flagAccrualRateLimit, "l", 2, "accrual rate limit")
 	flag.StringVar(&flagKey, "k", "very-secret-key", "key for signature")
 

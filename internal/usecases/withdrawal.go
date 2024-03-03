@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 	"fmt"
+	"github.com/soltanat/go-diploma-1/internal/logger"
 
 	"github.com/soltanat/go-diploma-1/internal/entities"
 	"github.com/soltanat/go-diploma-1/internal/usecases/storager"
@@ -45,6 +46,8 @@ func (u *WithdrawUseCase) Count(ctx context.Context, userID entities.Login) (int
 func (u *WithdrawUseCase) Withdraw(
 	ctx context.Context, userID entities.Login, orderNumber entities.OrderNumber, amount entities.Currency,
 ) error {
+	l := logger.Get()
+
 	if err := userID.Validate(); err != nil {
 		return err
 	}
@@ -70,6 +73,8 @@ func (u *WithdrawUseCase) Withdraw(
 		return err
 	}
 
+	l.Debug().Str("usecase", "Withdraw").Msgf("found user %s balance %v", user.Login, user.Balance)
+
 	if err := user.Balance.Sub(&amount); err != nil {
 		err = tx.Rollback(ctx)
 		if err != nil {
@@ -86,6 +91,7 @@ func (u *WithdrawUseCase) Withdraw(
 		}
 		return err
 	}
+	l.Debug().Str("usecase", "Withdraw").Msgf("updated user %s balance %v after withdraw %v", user.Login, user.Balance, amount)
 
 	withdrawal := entities.NewWithdrawal(orderNumber, amount, userID)
 	err = u.withdrawalStorager.Save(ctx, tx, withdrawal)
@@ -96,6 +102,7 @@ func (u *WithdrawUseCase) Withdraw(
 		}
 		return err
 	}
+	l.Debug().Str("usecase", "Withdraw").Msgf("created withdrawal %v", withdrawal)
 
 	err = tx.Commit(ctx)
 	if err != nil {

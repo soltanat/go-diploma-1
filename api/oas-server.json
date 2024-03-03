@@ -4,11 +4,6 @@
     "title": "go-diploma-1",
     "version": "0.0.1"
   },
-  "servers": [
-    {
-      "url": "http://localhost:8081"
-    }
-  ],
   "paths": {
     "/api/user/register": {
       "post": {
@@ -26,7 +21,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "headers": {
+              "Authorization": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad Request"
@@ -176,7 +178,8 @@
                   ],
                   "properties": {
                     "current": {
-                      "type": "string"
+                      "type": "number",
+                      "format": "float"
                     },
                     "withdrawals": {
                       "type": "integer"
@@ -215,10 +218,11 @@
                 ],
                 "properties": {
                   "order": {
-                    "type": "integer"
+                    "type": "string"
                   },
                   "sum": {
-                    "type": "string"
+                    "type": "number",
+                    "format": "float"
                   }
                 }
               }
@@ -316,7 +320,7 @@
         ],
         "properties": {
           "number": {
-            "type": "integer"
+            "type": "string"
           },
           "status": {
             "type": "string",
@@ -328,7 +332,8 @@
             ]
           },
           "accrual": {
-            "type": "string"
+            "type": "number",
+            "format": "float"
           },
           "uploaded_at": {
             "type": "string"
@@ -344,14 +349,14 @@
         ],
         "properties": {
           "order": {
-            "type": "integer"
-          },
-          "sum": {
             "type": "string"
           },
+          "sum": {
+            "type": "number",
+            "format": "float"
+          },
           "processed_at": {
-            "type": "string",
-            "format": "date-time"
+            "type": "string"
           }
         }
       }

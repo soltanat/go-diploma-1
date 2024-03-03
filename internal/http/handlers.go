@@ -49,7 +49,17 @@ func (h *ServerInterfaceWrapper) RegisterUser(ctx context.Context, request api.R
 		return api.RegisterUser500Response{}, nil
 	}
 
-	return api.RegisterUser200Response{}, nil
+	token, err := h.tokenProvider.GenerateToken(request.Body.Login)
+	if err != nil {
+		l.Err(err).Msg("failed to generate token")
+		return api.RegisterUser500Response{}, nil
+	}
+
+	return api.RegisterUser200Response{
+		Headers: api.RegisterUser200ResponseHeaders{
+			Authorization: "Bearer " + token,
+		},
+	}, nil
 }
 
 func (h *ServerInterfaceWrapper) LoginUser(ctx context.Context, request api.LoginUserRequestObject) (api.LoginUserResponseObject, error) {
@@ -139,12 +149,12 @@ func (h *ServerInterfaceWrapper) GetOrders(ctx context.Context, request api.GetO
 	response := api.GetOrders200JSONResponse{}
 	for _, o := range oo {
 		apiOrder := api.Order{
-			Number:     int(o.Number),
+			Number:     strconv.Itoa(int(o.Number)),
 			Status:     api.OrderStatus(o.Status.String()),
 			UploadedAt: o.UploadedAt.Format(time.RFC3339),
 		}
 		if o.IsProcessed() {
-			accrual := o.Accrual.String()
+			accrual := o.Accrual.Float()
 			apiOrder.Accrual = &accrual
 		}
 		response = append(response, apiOrder)
@@ -171,7 +181,7 @@ func (h *ServerInterfaceWrapper) GetBalance(ctx context.Context, request api.Get
 	}
 
 	return api.GetBalance200JSONResponse{
-		Current:     user.Balance.String(),
+		Current:     user.Balance.Float(),
 		Withdrawals: countWithdrawals,
 	}, nil
 }
@@ -180,8 +190,13 @@ func (h *ServerInterfaceWrapper) Withdraw(ctx context.Context, request api.Withd
 	l := logger.Get()
 	userID := ctx.Value(userIDKeyStruct).(string)
 
-	err := h.withdrawalUseCase.Withdraw(
-		ctx, entities.Login(userID), entities.OrderNumber(request.Body.Order), entities.FromString(request.Body.Sum),
+	orderNumber, err := strconv.Atoi(request.Body.Order)
+	if err != nil {
+		return api.Withdraw422Response{}, nil
+	}
+
+	err = h.withdrawalUseCase.Withdraw(
+		ctx, entities.Login(userID), entities.OrderNumber(orderNumber), entities.CurrencyFromFloat(request.Body.Sum),
 	)
 	if err != nil {
 		outOfBalanceErr := &entities.OutOfBalanceError{}
@@ -215,9 +230,9 @@ func (h *ServerInterfaceWrapper) GetWithdrawals(ctx context.Context, request api
 	response := api.GetWithdrawals200JSONResponse{}
 	for _, w := range ww {
 		apiWithdrawal := api.Withdrawal{
-			Order:       int(w.OrderNumber),
-			ProcessedAt: w.ProcessedAt,
-			Sum:         w.Sum.String(),
+			Order:       strconv.Itoa(int(w.OrderNumber)),
+			ProcessedAt: w.ProcessedAt.Format(time.RFC3339),
+			Sum:         w.Sum.Float(),
 		}
 		response = append(response, apiWithdrawal)
 	}

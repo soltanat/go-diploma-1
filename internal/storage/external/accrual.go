@@ -33,11 +33,13 @@ func (s *AccrualStorage) Get(ctx context.Context, number entities.OrderNumber) (
 	if accrualOrder.StatusCode() == http.StatusNoContent {
 		return nil, entities.NotFoundError{}
 	}
+	if accrualOrder.StatusCode() != http.StatusOK {
+		return nil, entities.StorageError{Err: fmt.Errorf("unexpected status code: %d", accrualOrder.StatusCode())}
+	}
 
 	var currency *entities.Currency = nil
 	if accrualOrder.JSON200.Accrual != nil {
-		accrualString := fmt.Sprintf("%.2f", *accrualOrder.JSON200.Accrual)
-		currencyPtr := entities.FromString(accrualString)
+		currencyPtr := entities.CurrencyFromFloat(*accrualOrder.JSON200.Accrual)
 		currency = &currencyPtr
 	}
 

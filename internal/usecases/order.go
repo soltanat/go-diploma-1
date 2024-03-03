@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/soltanat/go-diploma-1/internal/logger"
 
 	"github.com/soltanat/go-diploma-1/internal/entities"
 	"github.com/soltanat/go-diploma-1/internal/usecases/storager"
@@ -33,6 +34,8 @@ func NewOrderUseCase(orderStorager storager.OrderStorager, userStorager storager
 }
 
 func (u *OrderUseCase) CreateOrder(ctx context.Context, orderNumber entities.OrderNumber, userID entities.Login) error {
+	l := logger.Get()
+
 	if err := orderNumber.Validate(); err != nil {
 		return err
 	}
@@ -65,6 +68,8 @@ func (u *OrderUseCase) CreateOrder(ctx context.Context, orderNumber entities.Ord
 	if err != nil {
 		return err
 	}
+
+	l.Debug().Str("usecase", "CreateOrder").Msgf("created order %d", orderNumber)
 
 	return nil
 }

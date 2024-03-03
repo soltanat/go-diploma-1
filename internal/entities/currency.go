@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+const DecimalPartLength = 100
+
 type Currency struct {
 	Whole   int
 	Decimal int
@@ -50,20 +52,43 @@ func (c *Currency) Sub(sub *Currency) error {
 	return nil
 }
 
-func (c *Currency) String() string {
-	return fmt.Sprintf("%d.%d", c.Whole, c.Decimal)
+//func (c *Currency) String() string {
+//	return fmt.Sprintf("%d.%d", c.Whole, c.Decimal)
+//}
+
+func (c *Currency) Float() float32 {
+	return float32(c.Whole) + float32(c.Decimal)/100
 }
 
-func FromString(s string) Currency {
-	whole, decimal := 0, 0
+//func CurrencyFromString(s string) Currency {
+//	whole, decimal := 0, 0
+//
+//	parts := strings.Split(s, ".")
+//	if len(parts) == 1 {
+//		whole, _ = strconv.Atoi(parts[0])
+//	} else if len(parts) == 2 {
+//		whole, _ = strconv.Atoi(parts[0])
+//		decimal, _ = strconv.Atoi(parts[1])
+//	}
+//
+//	return Currency{Whole: whole, Decimal: decimal}
+//}
 
-	parts := strings.Split(s, ".")
-	if len(parts) == 1 {
-		whole, _ = strconv.Atoi(parts[0])
-	} else if len(parts) == 2 {
-		whole, _ = strconv.Atoi(parts[0])
-		decimal, _ = strconv.Atoi(parts[1])
+func CurrencyFromFloat(v float32) Currency {
+	if v < 0 {
+		return Currency{Whole: 0, Decimal: 0}
 	}
 
-	return Currency{Whole: whole, Decimal: decimal}
+	s := fmt.Sprintf("%.2f", v)
+	parts := strings.Split(s, ".")
+	if len(parts) == 1 {
+		whole, _ := strconv.Atoi(parts[0])
+		return Currency{Whole: whole, Decimal: 0}
+	} else if len(parts) == 2 {
+		whole, _ := strconv.Atoi(parts[0])
+		decimal, _ := strconv.Atoi(parts[1])
+		return Currency{Whole: whole, Decimal: decimal}
+	}
+
+	return Currency{Whole: 0, Decimal: 0}
 }

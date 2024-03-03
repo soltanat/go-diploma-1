@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	http2 "net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -27,6 +29,8 @@ import (
 
 func main() {
 	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	l := logger.Get()
 
@@ -145,7 +149,10 @@ func main() {
 	go func() {
 		err := e.Start(flagAddr)
 		if err != nil {
-			l.Error().Err(err)
+			if errors.Is(err, http2.ErrServerClosed) {
+				return
+			}
+			l.Fatal().Err(err).Str("addr", flagAddr).Msg("unable to start server")
 		}
 	}()
 

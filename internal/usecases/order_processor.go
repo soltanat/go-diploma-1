@@ -68,7 +68,6 @@ func (u *OrderProcessor) Run(ctx context.Context) {
 			return
 		}
 		l := logger.Get()
-		l.Debug().Msgf("start process order %d", order.Number)
 		if err := u.ProcessOrder(ctx, order.Number); err != nil {
 			l.Error().Err(err).Msgf("failed process order %d", order.Number)
 		}
@@ -80,6 +79,9 @@ func (u *OrderProcessor) Stop() {
 }
 
 func (u *OrderProcessor) ProcessOrder(ctx context.Context, number entities.OrderNumber) error {
+	l := logger.Get()
+	l.Debug().Str("usecase", "ProcessOrder").Msgf("start process order %d", number)
+
 	if err := number.Validate(); err != nil {
 		return err
 	}
@@ -100,6 +102,7 @@ func (u *OrderProcessor) ProcessOrder(ctx context.Context, number entities.Order
 	}
 
 	if order.IsProcessed() {
+		l.Debug().Str("usecase", "ProcessOrder").Msgf("order %d is already processed", number)
 		err = tx.Rollback(ctx)
 		if err != nil {
 			return err
@@ -116,6 +119,8 @@ func (u *OrderProcessor) ProcessOrder(ctx context.Context, number entities.Order
 		return err
 	}
 
+	l.Debug().Str("usecase", "ProcessOrder").Msgf("found user %s balance %v", user.Login, user.Balance)
+
 	accrualOrder, err := u.accrualStorager.Get(ctx, number)
 	if err != nil {
 		err = tx.Rollback(ctx)
@@ -124,6 +129,7 @@ func (u *OrderProcessor) ProcessOrder(ctx context.Context, number entities.Order
 		}
 		return err
 	}
+	l.Debug().Str("usecase", "ProcessOrder").Msgf("found accrual order %d, currency %v", accrualOrder.Number, accrualOrder.Accrual)
 
 	updated := order.UpdateWithAccrualOrder(accrualOrder)
 
@@ -147,6 +153,7 @@ func (u *OrderProcessor) ProcessOrder(ctx context.Context, number entities.Order
 		}
 		return err
 	}
+	l.Debug().Str("usecase", "ProcessOrder").Msgf("updated user %s balance %v", user.Login, user.Balance)
 
 	err = u.orderStorager.Update(ctx, tx, order)
 	if err != nil {
@@ -162,5 +169,6 @@ func (u *OrderProcessor) ProcessOrder(ctx context.Context, number entities.Order
 		return err
 	}
 
+	l.Debug().Str("usecase", "ProcessOrder").Msgf("processed order %d", number)
 	return nil
 }
