@@ -8,5 +8,5 @@ type AccrualOrderStatus string
 type AccrualOrder struct {
 	Number  OrderNumber
 	Status  AccrualOrderStatus
-	Accrual Currency
+	Accrual *Currency
 }

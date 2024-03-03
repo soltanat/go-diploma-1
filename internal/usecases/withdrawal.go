@@ -35,6 +35,13 @@ func (u *WithdrawUseCase) List(
 	return u.withdrawalStorager.List(ctx, nil, userID)
 }
 
+func (u *WithdrawUseCase) Count(ctx context.Context, userID entities.Login) (int, error) {
+	if err := userID.Validate(); err != nil {
+		return 0, err
+	}
+	return u.withdrawalStorager.Count(ctx, nil, userID)
+}
+
 func (u *WithdrawUseCase) Withdraw(
 	ctx context.Context, userID entities.Login, orderNumber entities.OrderNumber, amount entities.Currency,
 ) error {
@@ -49,6 +56,11 @@ func (u *WithdrawUseCase) Withdraw(
 	}
 
 	tx := u.userStorager.Tx(ctx)
+	err := tx.Begin(ctx)
+	if err != nil {
+		return err
+	}
+
 	user, err := u.userStorager.Get(ctx, tx, userID)
 	if err != nil {
 		tx.Rollback(ctx)
@@ -73,6 +85,10 @@ func (u *WithdrawUseCase) Withdraw(
 		return err
 	}
 
-	tx.Commit(ctx)
+	err = tx.Commit(ctx)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

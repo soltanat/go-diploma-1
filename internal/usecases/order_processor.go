@@ -40,6 +40,19 @@ func NewOrderProcessor(
 	}, nil
 }
 
+func (u *OrderProcessor) Produce(ctx context.Context) error {
+	orders, err := u.orderStorager.List(
+		ctx, nil, nil, &[]entities.OrderStatus{entities.OrderStatusNEW, entities.OrderStatusPROCESSING},
+	)
+	if err != nil {
+		return err
+	}
+	for _, order := range orders {
+		u.orders <- order
+	}
+	return nil
+}
+
 func (u *OrderProcessor) AddOrder(order entities.Order) {
 	u.orders <- order
 }
@@ -65,6 +78,10 @@ func (u *OrderProcessor) ProcessOrder(ctx context.Context, number entities.Order
 	}
 
 	tx := u.orderStorager.Tx(ctx)
+	err := tx.Begin(ctx)
+	if err != nil {
+		return err
+	}
 
 	order, err := u.orderStorager.Get(ctx, tx, number)
 	if err != nil {
@@ -96,7 +113,7 @@ func (u *OrderProcessor) ProcessOrder(ctx context.Context, number entities.Order
 		return nil
 	}
 
-	user.Balance.Add(&accrualOrder.Accrual)
+	user.Balance.Add(accrualOrder.Accrual)
 
 	err = u.userStorager.Update(ctx, tx, user)
 	if err != nil {
@@ -110,7 +127,10 @@ func (u *OrderProcessor) ProcessOrder(ctx context.Context, number entities.Order
 		return err
 	}
 
-	tx.Commit(ctx)
+	err = tx.Commit(ctx)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

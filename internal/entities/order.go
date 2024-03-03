@@ -2,6 +2,8 @@ package entities
 
 import (
 	"fmt"
+	"github.com/theplant/luhn"
+	_ "github.com/theplant/luhn"
 	"time"
 )
 
@@ -54,7 +56,9 @@ func (o *Order) UpdateWithAccrualOrder(accrualOrder *AccrualOrder) bool {
 		newStatus = OrderStatusPROCESSING
 	case AccrualOrderStatusPROCESSED:
 		newStatus = OrderStatusPROCESSED
-		o.Accrual.Add(&accrualOrder.Accrual)
+		if accrualOrder.Accrual != nil {
+			o.Accrual = *accrualOrder.Accrual
+		}
 	}
 
 	if newStatus == o.Status {
@@ -69,7 +73,7 @@ func (o *Order) UpdateWithAccrualOrder(accrualOrder *AccrualOrder) bool {
 type OrderNumber int
 
 func (n OrderNumber) Validate() error {
-	if n <= 0 {
+	if !luhn.Valid(int(n)) {
 		return ValidationError{Err: fmt.Errorf("invalid order number: %d", n)}
 	}
 	return nil

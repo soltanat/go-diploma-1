@@ -81,5 +81,5 @@ func (u *OrderUseCase) ListOrdersByUserID(ctx context.Context, userID entities.L
 		return nil, err
 	}
 
-	return u.orderStorager.List(ctx, nil, &userID)
+	return u.orderStorager.List(ctx, nil, &userID, nil)
 }

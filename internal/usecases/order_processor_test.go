@@ -55,7 +55,7 @@ func TestOrderProcessor_ProcessOrder(t *testing.T) {
 		returnAccrual := entities.AccrualOrder{
 			Number: orderNumber,
 			Status: entities.AccrualOrderStatusPROCESSED,
-			Accrual: entities.Currency{
+			Accrual: &entities.Currency{
 				Whole:   20,
 				Decimal: 20,
 			},

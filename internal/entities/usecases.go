@@ -18,6 +18,7 @@ type UserUseCase interface {
 }
 
 type WithdrawalUseCase interface {
+	Count(ctx context.Context, userID Login) (int, error)
 	List(ctx context.Context, userID Login) ([]Withdrawal, error)
 	Withdraw(ctx context.Context, userID Login, orderNumber OrderNumber, amount Currency) error
 }
